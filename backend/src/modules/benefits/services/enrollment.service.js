@@ -2,21 +2,37 @@
 
 const { models, sequelize } = require('../../../models');
 const AppError = require('../../../utils/AppError');
+const money = require('../../../utils/money');
 const {
   BENEFIT_ENROLLMENT_STATUS,
   BENEFIT_PLAN_STATUS,
 } = require('../../../config/constants');
 
+// Normalize a plan cost to a monthly-equivalent based on its frequency, so the
+// enrollment's *_monthly_cost fields are truly monthly.
+function toMonthly(amount, frequency) {
+  const n = money.toNumber(amount);
+  if (frequency === 'per_year') return money.divide(n, 12);
+  return n; // per_month / per_payroll / one_time stored as-is
+}
+
 async function enroll({ organizationId, employeeId, planId, startDate, dependents = [], electedAmount, notes }) {
   return sequelize.transaction(async (transaction) => {
     const plan = await models.BenefitPlan.findOne({
       where: { id: planId, organization_id: organizationId },
+      lock: transaction.LOCK.UPDATE,
       transaction,
     });
     if (!plan) throw AppError.notFound('Benefit plan not found');
     if (plan.status !== BENEFIT_PLAN_STATUS.ACTIVE) {
       throw AppError.conflict('Plan is not currently active');
     }
+    // Enforce the plan's effective window against the enrollment start date.
+    const effStart = plan.effective_from ? String(plan.effective_from) : null;
+    const effEnd = plan.effective_to ? String(plan.effective_to) : null;
+    const start = startDate ? String(startDate) : new Date().toISOString().slice(0, 10);
+    if (effStart && start < effStart) throw AppError.unprocessable('Plan is not yet effective on the start date');
+    if (effEnd && start > effEnd) throw AppError.unprocessable('Plan is no longer effective on the start date');
     if (plan.total_seats !== null && plan.total_seats !== undefined && plan.seats_used >= plan.total_seats) {
       throw AppError.conflict('No seats available for this plan');
     }
@@ -61,8 +77,8 @@ async function enroll({ organizationId, employeeId, planId, startDate, dependent
         status: initialStatus,
         start_date: startDate,
         dependents_count: dependents.length,
-        employee_monthly_cost: plan.employee_cost_amount,
-        employer_monthly_cost: plan.employer_cost_amount,
+        employee_monthly_cost: toMonthly(plan.employee_cost_amount, plan.cost_frequency),
+        employer_monthly_cost: toMonthly(plan.employer_cost_amount, plan.cost_frequency),
         currency: plan.currency,
         elected_amount: electedAmount ?? null,
         notes: notes || null,
@@ -96,8 +112,14 @@ async function approveEnrollment({ organizationId, id, approverUserId }) {
     if (enrollment.status !== BENEFIT_ENROLLMENT_STATUS.PENDING_APPROVAL) {
       throw AppError.conflict('Enrollment is not pending approval');
     }
-    const plan = await models.BenefitPlan.findByPk(enrollment.benefit_plan_id, { transaction });
+    const plan = await models.BenefitPlan.findByPk(enrollment.benefit_plan_id, {
+      lock: transaction.LOCK.UPDATE,
+      transaction,
+    });
     if (!plan) throw AppError.notFound('Linked plan not found');
+    if (plan.status !== BENEFIT_PLAN_STATUS.ACTIVE) {
+      throw AppError.conflict('Plan is no longer active');
+    }
     if (plan.total_seats !== null && plan.total_seats !== undefined && plan.seats_used >= plan.total_seats) {
       throw AppError.conflict('No seats available');
     }

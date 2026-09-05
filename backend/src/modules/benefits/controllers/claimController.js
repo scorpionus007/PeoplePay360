@@ -39,7 +39,10 @@ async function getOne(req, res) {
 }
 
 async function submit(req, res) {
-  const employeeId = req.body.employee_id || req.user.employeeId;
+  // Employees may only submit claims for themselves; an approver may act on
+  // behalf of another employee.
+  const canActForOthers = (req.user.roles || []).includes('admin') || (req.user.permissions || []).includes('benefit.claim.approve');
+  const employeeId = canActForOthers && req.body.employee_id ? req.body.employee_id : req.user.employeeId;
   if (!employeeId) throw AppError.badRequest('No employee associated with this user');
   const row = await claim.submit({
     organizationId: req.user.organizationId,
