@@ -92,11 +92,26 @@ const NAV: Group[] = [
   },
   {
     label: 'IT',
-    items: [{ to: '/it/devices', label: 'Devices', icon: Laptop, anyPerm: ['it.device.read'] }],
+    items: [
+      { to: '/it/dashboard', label: 'IT Overview', icon: Sparkles, anyPerm: ['it.device.read'] },
+      { to: '/it/devices', label: 'Devices', icon: Laptop, anyPerm: ['it.device.read'] },
+      { to: '/it/software', label: 'Software', icon: ClipboardList, anyPerm: ['it.software.read'] },
+      { to: '/it/baseline', label: 'Baseline', icon: ShieldCheck, anyPerm: ['it.baseline.read'] },
+      { to: '/it/edr', label: 'EDR', icon: ShieldCheck, anyPerm: ['it.edr.read'] },
+      { to: '/it/onboarding', label: 'Onboarding', icon: UserPlus, anyPerm: ['it.onboarding.read'] },
+    ],
   },
   {
     label: 'Mobility',
-    items: [{ to: '/mobility/visas', label: 'Mobility', icon: Plane, anyPerm: ['visa.read', 'location.standard.read'] }],
+    items: [
+      { to: '/mobility/dashboard', label: 'Mobility Overview', icon: Sparkles, anyPerm: ['visa.read', 'location.standard.read'] },
+      { to: '/mobility/location-standards', label: 'Location Standards', icon: Home, anyPerm: ['location.standard.read'] },
+      { to: '/mobility/partners', label: 'Partners', icon: Handshake, anyPerm: ['mobility.partner.read'] },
+      { to: '/mobility/visas', label: 'Visas', icon: Plane, anyPerm: ['visa.read'] },
+      { to: '/mobility/relocations', label: 'Relocations', icon: Home, anyPerm: ['relocation.read'] },
+      { to: '/mobility/immigration', label: 'Immigration Cases', icon: ClipboardList, anyPerm: ['immigration.case.read'] },
+      { to: '/mobility/travel', label: 'Travel', icon: Plane, anyPerm: ['travel.read'] },
+    ],
   },
   {
     label: 'Settings',

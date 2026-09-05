@@ -1,12 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { Laptop, Plane } from 'lucide-react';
 import { useAuth } from './auth/AuthContext';
 import { AppShell } from './layout/AppShell';
 import { LoginPage } from './pages/Login';
 import { LandingPage } from './pages/Landing';
 import { DashboardPage } from './pages/Dashboard';
 import { NotFoundPage } from './pages/NotFound';
-import { PlaceholderPage } from './pages/Placeholder';
 import { EmployeesPage } from './pages/core/EmployeesPage';
 import { DepartmentsPage } from './pages/core/DepartmentsPage';
 import { SettingsPage } from './pages/core/SettingsPage';
@@ -43,6 +41,19 @@ import { ApplicationsPage } from './pages/hiring/ApplicationsPage';
 import { InterviewsPage } from './pages/hiring/InterviewsPage';
 import { OffersPage } from './pages/hiring/OffersPage';
 import { ReferralsPage } from './pages/hiring/ReferralsPage';
+import { ITDashboardPage } from './pages/it/ITDashboardPage';
+import { DevicesPage } from './pages/it/DevicesPage';
+import { SoftwarePage } from './pages/it/SoftwarePage';
+import { BaselinePage } from './pages/it/BaselinePage';
+import { EdrPage } from './pages/it/EdrPage';
+import { OnboardingPage } from './pages/it/OnboardingPage';
+import { MobilityDashboardPage } from './pages/mobility/MobilityDashboardPage';
+import { LocationStandardsPage } from './pages/mobility/LocationStandardsPage';
+import { MobilityPartnersPage } from './pages/mobility/MobilityPartnersPage';
+import { VisasPage } from './pages/mobility/VisasPage';
+import { RelocationsPage } from './pages/mobility/RelocationsPage';
+import { ImmigrationCasesPage } from './pages/mobility/ImmigrationCasesPage';
+import { TravelPage } from './pages/mobility/TravelPage';
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
@@ -112,8 +123,20 @@ export default function App() {
         <Route path="/hiring/offers" element={<OffersPage />} />
         <Route path="/hiring/referrals" element={<ReferralsPage />} />
 
-        <Route path="/it/*" element={<PlaceholderPage title="IT Administration" subtitle="Devices, software, baseline, EDR" module="IT Administration" icon={<Laptop size={26} />} />} />
-        <Route path="/mobility/*" element={<PlaceholderPage title="Mobility" subtitle="Visas, relocation, immigration, travel" module="Mobility" icon={<Plane size={26} />} />} />
+        <Route path="/it/dashboard" element={<ITDashboardPage />} />
+        <Route path="/it/devices" element={<DevicesPage />} />
+        <Route path="/it/software" element={<SoftwarePage />} />
+        <Route path="/it/baseline" element={<BaselinePage />} />
+        <Route path="/it/edr" element={<EdrPage />} />
+        <Route path="/it/onboarding" element={<OnboardingPage />} />
+
+        <Route path="/mobility/dashboard" element={<MobilityDashboardPage />} />
+        <Route path="/mobility/location-standards" element={<LocationStandardsPage />} />
+        <Route path="/mobility/partners" element={<MobilityPartnersPage />} />
+        <Route path="/mobility/visas" element={<VisasPage />} />
+        <Route path="/mobility/relocations" element={<RelocationsPage />} />
+        <Route path="/mobility/immigration" element={<ImmigrationCasesPage />} />
+        <Route path="/mobility/travel" element={<TravelPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>
