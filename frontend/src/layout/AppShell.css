@@ -1,6 +1,9 @@
 .pp-shell {
   display: flex;
   min-height: 100vh;
+  /* dark ground so the rounded notch at the top-left of the main panel
+     reveals the sidebar colour, the Deel style curve */
+  background: var(--pp-sidebar-bg);
 }
 
 .pp-shell__main {
@@ -9,6 +12,8 @@
   flex-direction: column;
   min-width: 0;
   background: var(--pp-bg);
+  border-top-left-radius: 22px;
+  overflow: hidden;
 }
 
 .pp-shell__content {
