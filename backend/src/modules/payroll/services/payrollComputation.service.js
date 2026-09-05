@@ -36,7 +36,7 @@ function safeFormula(formula, context) {
   }
 }
 
-function computeRuleAmount({ rule, structureRule, basic, totals, contract, workedDays, workedHours }) {
+function computeRuleAmount({ rule, structureRule, basic, totals, contract, workedDays, workedHours, basicAmount }) {
   const computeType = rule.compute_type;
 
   const overrideAmount = structureRule?.override_amount;
@@ -44,7 +44,11 @@ function computeRuleAmount({ rule, structureRule, basic, totals, contract, worke
 
   if (computeType === SALARY_RULE_COMPUTE_TYPE.FIXED) {
     if (overrideAmount !== null && overrideAmount !== undefined) return money.toNumber(overrideAmount);
-    return money.toNumber(rule.fixed_amount);
+    if (rule.fixed_amount !== null && rule.fixed_amount !== undefined) return money.toNumber(rule.fixed_amount);
+    // A BASIC-category rule with no explicit amount represents the contract's
+    // period basic, so the payslip line reflects the actual base salary.
+    if (rule.category === SALARY_RULE_CATEGORY.BASIC) return money.toNumber(basicAmount);
+    return 0;
   }
 
   if (computeType === SALARY_RULE_COMPUTE_TYPE.PERCENT_OF_BASIC) {
@@ -82,13 +86,18 @@ function computeRuleAmount({ rule, structureRule, basic, totals, contract, worke
   return 0;
 }
 
-function computePayslipBreakdown({ contract, structureRules, workedDays, workedHours, extras }) {
+function computePayslipBreakdown({ contract, structureRules, workedDays, workedHours, extras, periodBasic }) {
   // extras: [{ salary_rule_id, code, name, category, amount }]
   const totals = initTotals();
   const lines = [];
 
-  const basicFromContract = money.toNumber(contract?.wage_amount);
-  totals[SALARY_RULE_CATEGORY.BASIC] = basicFromContract;
+  // The period basic: caller may pass a wage_period-adjusted value; otherwise
+  // fall back to the raw contract wage. Totals[BASIC] is NOT pre-seeded — a
+  // BASIC-category rule contributes it so the payslip line reflects it.
+  const basicAmount =
+    periodBasic !== undefined && periodBasic !== null
+      ? money.toNumber(periodBasic)
+      : money.toNumber(contract?.wage_amount);
 
   const sorted = [...structureRules].sort((a, b) => (a.sequence || 100) - (b.sequence || 100));
 
@@ -96,14 +105,26 @@ function computePayslipBreakdown({ contract, structureRules, workedDays, workedH
     const rule = sr.rule;
     if (!rule || !rule.is_active || !sr.is_active) continue;
 
+    // Maintain a running gross (basic + allowances accrued so far) and running
+    // net so percent_of_gross / formula rules that reference GROSS or NET see a
+    // real value rather than 0. Rules are evaluated in sequence order, so a tax
+    // rule sequenced after the allowances gets the correct gross.
+    const runningBasic = totals[SALARY_RULE_CATEGORY.BASIC] || basicAmount;
+    totals[SALARY_RULE_CATEGORY.GROSS] = money.add(runningBasic, totals[SALARY_RULE_CATEGORY.ALLOWANCE] || 0);
+    totals[SALARY_RULE_CATEGORY.NET] = money.subtract(
+      totals[SALARY_RULE_CATEGORY.GROSS],
+      money.add(totals[SALARY_RULE_CATEGORY.DEDUCTION] || 0, totals[SALARY_RULE_CATEGORY.TAX] || 0, totals[SALARY_RULE_CATEGORY.CONTRIBUTION] || 0)
+    );
+
     const amount = computeRuleAmount({
       rule,
       structureRule: sr,
-      basic: totals[SALARY_RULE_CATEGORY.BASIC] || basicFromContract,
+      basic: runningBasic,
       totals,
       contract,
       workedDays,
       workedHours,
+      basicAmount,
     });
 
     lines.push({
@@ -117,7 +138,10 @@ function computePayslipBreakdown({ contract, structureRules, workedDays, workedH
       amount,
     });
 
-    totals[rule.category] = money.add(totals[rule.category] || 0, amount);
+    // GROSS/NET are derived aggregates, not accumulated from rule lines.
+    if (rule.category !== SALARY_RULE_CATEGORY.GROSS && rule.category !== SALARY_RULE_CATEGORY.NET) {
+      totals[rule.category] = money.add(totals[rule.category] || 0, amount);
+    }
   }
 
   // Merge extras such as bonuses that the caller supplies.
@@ -134,23 +158,20 @@ function computePayslipBreakdown({ contract, structureRules, workedDays, workedH
         amount: money.toNumber(extra.amount),
         note: extra.note || null,
       });
-      totals[extra.category] = money.add(totals[extra.category] || 0, extra.amount);
+      if (extra.category !== SALARY_RULE_CATEGORY.GROSS && extra.category !== SALARY_RULE_CATEGORY.NET) {
+        totals[extra.category] = money.add(totals[extra.category] || 0, extra.amount);
+      }
     }
   }
 
-  const basic = totals[SALARY_RULE_CATEGORY.BASIC] || basicFromContract;
+  // Definitive aggregates: gross is basic + allowances; net subtracts the rest.
+  const basic = totals[SALARY_RULE_CATEGORY.BASIC] || basicAmount;
   const allowances = totals[SALARY_RULE_CATEGORY.ALLOWANCE] || 0;
-  const gross =
-    totals[SALARY_RULE_CATEGORY.GROSS] > 0
-      ? totals[SALARY_RULE_CATEGORY.GROSS]
-      : money.add(basic, allowances);
+  const gross = money.add(basic, allowances);
   const deductions = totals[SALARY_RULE_CATEGORY.DEDUCTION] || 0;
   const tax = totals[SALARY_RULE_CATEGORY.TAX] || 0;
   const contributions = totals[SALARY_RULE_CATEGORY.CONTRIBUTION] || 0;
-  const net =
-    totals[SALARY_RULE_CATEGORY.NET] > 0
-      ? totals[SALARY_RULE_CATEGORY.NET]
-      : money.subtract(gross, money.add(deductions, tax, contributions));
+  const net = money.subtract(gross, money.add(deductions, tax, contributions));
 
   return {
     lines,

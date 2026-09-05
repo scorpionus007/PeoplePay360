@@ -13,7 +13,7 @@ const {
 async function createRequest({ organizationId, employeeId, requestedAmount, reason, repaymentMode, emiMonths }) {
   return sequelize.transaction(async (transaction) => {
     const contract = await models.Contract.findOne({
-      where: { employee_id: employeeId, status: CONTRACT_STATUS.ACTIVE },
+      where: { employee_id: employeeId, organization_id: organizationId, status: CONTRACT_STATUS.ACTIVE },
       order: [['start_date', 'DESC']],
       transaction,
     });
@@ -65,13 +65,28 @@ async function createRequest({ organizationId, employeeId, requestedAmount, reas
   });
 }
 
-async function approve({ id, approvedAmount, approvedBy }) {
-  const request = await models.AdvanceSalaryRequest.findByPk(id);
+async function approve({ id, organizationId, approvedAmount, approvedBy }) {
+  const request = await models.AdvanceSalaryRequest.findOne({ where: { id, organization_id: organizationId } });
   if (!request) throw AppError.notFound('Advance salary request not found');
   if (request.status !== ADVANCE_SALARY_STATUS.REQUESTED) {
     throw AppError.conflict('Only requested advances can be approved');
   }
-  const amount = approvedAmount ?? money.toNumber(request.requested_amount);
+  const requested = money.toNumber(request.requested_amount);
+  const amount = approvedAmount ?? requested;
+  if (amount <= 0) throw AppError.unprocessable('Approved amount must be greater than zero');
+  if (amount > requested) {
+    throw AppError.unprocessable('Approved amount cannot exceed the requested amount', { requested });
+  }
+  // Re-assert the wage cap in case the approver tries to exceed policy.
+  const contract = await models.Contract.findOne({
+    where: { id: request.contract_id, organization_id: organizationId },
+  });
+  if (contract) {
+    const maxAllowed = money.percentOf(money.toNumber(contract.wage_amount), env.payroll.advanceSalary.maxPercent);
+    if (amount > maxAllowed) {
+      throw AppError.unprocessable(`Approved amount exceeds the maximum allowed advance of ${maxAllowed}`, { max_allowed: maxAllowed });
+    }
+  }
   request.approved_amount = amount;
   request.outstanding_amount = amount;
   request.service_fee_amount = money.percentOf(amount, money.toNumber(request.service_fee_percent));
@@ -83,8 +98,8 @@ async function approve({ id, approvedAmount, approvedBy }) {
   return request;
 }
 
-async function reject({ id }) {
-  const request = await models.AdvanceSalaryRequest.findByPk(id);
+async function reject({ id, organizationId }) {
+  const request = await models.AdvanceSalaryRequest.findOne({ where: { id, organization_id: organizationId } });
   if (!request) throw AppError.notFound('Advance salary request not found');
   if (request.status !== ADVANCE_SALARY_STATUS.REQUESTED) {
     throw AppError.conflict('Only requested advances can be rejected');
@@ -94,9 +109,9 @@ async function reject({ id }) {
   return request;
 }
 
-async function markDisbursed({ id, disbursedBy, externalReference }) {
+async function markDisbursed({ id, organizationId, disbursedBy, externalReference }) {
   return sequelize.transaction(async (transaction) => {
-    const request = await models.AdvanceSalaryRequest.findByPk(id, { transaction });
+    const request = await models.AdvanceSalaryRequest.findOne({ where: { id, organization_id: organizationId }, transaction });
     if (!request) throw AppError.notFound('Advance salary request not found');
     if (request.status !== ADVANCE_SALARY_STATUS.APPROVED) {
       throw AppError.conflict('Only approved advances can be disbursed');
@@ -125,15 +140,18 @@ async function markDisbursed({ id, disbursedBy, externalReference }) {
   });
 }
 
-async function recordRepayment({ id, mode, amount, currency, payslipId, externalReference, note }) {
+async function recordRepayment({ id, organizationId, mode, amount, currency, payslipId, externalReference, note }) {
   return sequelize.transaction(async (transaction) => {
-    const request = await models.AdvanceSalaryRequest.findByPk(id, { transaction });
+    const request = await models.AdvanceSalaryRequest.findOne({ where: { id, organization_id: organizationId }, transaction });
     if (!request) throw AppError.notFound('Advance salary request not found');
     if (![ADVANCE_SALARY_STATUS.DISBURSED, ADVANCE_SALARY_STATUS.RECOVERING].includes(request.status)) {
       throw AppError.conflict('Advance is not in a repayable state');
     }
-    const numericAmount = money.toNumber(amount);
+    const outstanding = money.toNumber(request.outstanding_amount);
+    let numericAmount = money.toNumber(amount);
     if (numericAmount <= 0) throw AppError.badRequest('Repayment amount must be greater than zero');
+    // Never record more than the outstanding balance.
+    if (numericAmount > outstanding) numericAmount = outstanding;
 
     const repayment = await models.AdvanceSalaryRepayment.create(
       {
@@ -162,8 +180,8 @@ async function recordRepayment({ id, mode, amount, currency, payslipId, external
   });
 }
 
-async function convertToEmi({ id, emiMonths }) {
-  const request = await models.AdvanceSalaryRequest.findByPk(id);
+async function convertToEmi({ id, organizationId, emiMonths }) {
+  const request = await models.AdvanceSalaryRequest.findOne({ where: { id, organization_id: organizationId } });
   if (!request) throw AppError.notFound('Advance salary request not found');
   if (![ADVANCE_SALARY_STATUS.DISBURSED, ADVANCE_SALARY_STATUS.RECOVERING].includes(request.status)) {
     throw AppError.conflict('Only active advances can be converted to EMI');

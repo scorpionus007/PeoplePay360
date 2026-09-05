@@ -88,17 +88,25 @@ async function create(req, res) {
 }
 
 async function compute(req, res) {
-  const payrun = await payrunService.computePayrun(req.params.id);
+  const payrun = await payrunService.computePayrun(req.params.id, req.user.organizationId);
   return success(res, payrun);
 }
 
 async function validate(req, res) {
-  const payrun = await payrunService.validatePayrun({ id: req.params.id, validatedBy: req.user.id });
+  const payrun = await payrunService.validatePayrun({
+    id: req.params.id,
+    validatedBy: req.user.id,
+    organizationId: req.user.organizationId,
+  });
   return success(res, payrun);
 }
 
 async function markPaid(req, res) {
-  const payrun = await payrunService.markPaid({ id: req.params.id, releasedBy: req.user.id });
+  const payrun = await payrunService.markPaid({
+    id: req.params.id,
+    releasedBy: req.user.id,
+    organizationId: req.user.organizationId,
+  });
   return success(res, payrun);
 }
 
@@ -107,6 +115,9 @@ async function cancel(req, res) {
     where: { id: req.params.id, organization_id: req.user.organizationId },
   });
   if (!payrun) throw AppError.notFound('Payrun not found');
+  if (!['draft', 'computed', 'validated'].includes(payrun.status)) {
+    throw AppError.conflict('A paid or already cancelled payrun cannot be cancelled');
+  }
   payrun.status = 'cancelled';
   await payrun.save();
   return success(res, payrun);
