@@ -1,0 +1,45 @@
+.pp-why {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  background: #fff;
+  color: #000;
+}
+
+.pp-why__inner {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 96px 36px 72px;
+}
+
+.pp-why__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.28em;
+  font-size: clamp(2.2rem, 6.5vw, 4.4rem);
+  color: #000;
+  margin: 0;
+}
+
+.pp-why__word {
+  display: inline-flex;
+  align-items: baseline;
+  will-change: transform, opacity;
+}
+
+.pp-why__body {
+  margin: 20px 0 0;
+  font-size: 17px;
+  line-height: 1.6;
+  letter-spacing: -0.015em;
+  max-width: none;
+  color: #000;
+}
+
+@media (max-width: 820px) {
+  .pp-why__inner {
+    padding: 72px 16px 56px;
+  }
+}
