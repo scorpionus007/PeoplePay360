@@ -41,6 +41,34 @@ const PERMISSIONS = Object.freeze({
   ADVANCE_SALARY_REQUEST: 'advance.salary.request',
   ADVANCE_SALARY_APPROVE: 'advance.salary.approve',
   BONUS_MANAGE: 'bonus.manage',
+
+  // HR: Working Schedules
+  WORKING_SCHEDULE_READ: 'working_schedule.read',
+  WORKING_SCHEDULE_WRITE: 'working_schedule.write',
+
+  // HR: Attendance
+  ATTENDANCE_READ: 'attendance.read',
+  ATTENDANCE_WRITE: 'attendance.write',
+  ATTENDANCE_SELF_WRITE: 'attendance.self.write',
+  ATTENDANCE_CORRECT: 'attendance.correct',
+
+  // HR: Time Off
+  TIME_OFF_TYPE_READ: 'timeoff.type.read',
+  TIME_OFF_TYPE_WRITE: 'timeoff.type.write',
+  TIME_OFF_ALLOCATION_READ: 'timeoff.allocation.read',
+  TIME_OFF_ALLOCATION_WRITE: 'timeoff.allocation.write',
+  TIME_OFF_ALLOCATION_APPROVE: 'timeoff.allocation.approve',
+  TIME_OFF_REQUEST_READ: 'timeoff.request.read',
+  TIME_OFF_REQUEST_WRITE: 'timeoff.request.write',
+  TIME_OFF_REQUEST_APPROVE: 'timeoff.request.approve',
+
+  // HR: Employee services, feedback, chat
+  FEEDBACK_READ: 'feedback.read',
+  FEEDBACK_WRITE: 'feedback.write',
+  HR_REQUEST_READ: 'hr.request.read',
+  HR_REQUEST_WRITE: 'hr.request.write',
+  HR_CHAT_READ: 'hr.chat.read',
+  HR_CHAT_WRITE: 'hr.chat.write',
 });
 
 const EMPLOYMENT_STATUS = Object.freeze({
@@ -145,6 +173,86 @@ const BONUS_TYPE = Object.freeze({
   DISCRETIONARY: 'discretionary',
 });
 
+const ATTENDANCE_STATUS = Object.freeze({
+  PRESENT: 'present',
+  LATE: 'late',
+  EARLY_LEAVE: 'early_leave',
+  ABSENT: 'absent',
+  ON_LEAVE: 'on_leave',
+  HOLIDAY: 'holiday',
+  WEEKEND: 'weekend',
+  OVERTIME: 'overtime',
+  MISSING_CHECKOUT: 'missing_checkout',
+});
+
+const TIME_OFF_UNIT = Object.freeze({
+  DAYS: 'days',
+  HOURS: 'hours',
+});
+
+const TIME_OFF_REQUEST_STATUS = Object.freeze({
+  DRAFT: 'draft',
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REFUSED: 'refused',
+  CANCELLED: 'cancelled',
+});
+
+const TIME_OFF_ALLOCATION_STATUS = Object.freeze({
+  DRAFT: 'draft',
+  PENDING_APPROVAL: 'pending_approval',
+  APPROVED: 'approved',
+  REFUSED: 'refused',
+  EXPIRED: 'expired',
+});
+
+const FEEDBACK_CATEGORY = Object.freeze({
+  APPRECIATION: 'appreciation',
+  COMPLAINT: 'complaint',
+  SUGGESTION: 'suggestion',
+  HARASSMENT: 'harassment',
+  SAFETY: 'safety',
+  POLICY: 'policy',
+  MANAGER: 'manager',
+  PEER: 'peer',
+  OTHER: 'other',
+});
+
+const FEEDBACK_STATUS = Object.freeze({
+  NEW: 'new',
+  UNDER_REVIEW: 'under_review',
+  ACTION_TAKEN: 'action_taken',
+  ESCALATED: 'escalated',
+  CLOSED: 'closed',
+});
+
+const HR_REQUEST_TYPE = Object.freeze({
+  DOCUMENT: 'document',
+  LETTER: 'letter',
+  POLICY_QUERY: 'policy_query',
+  SALARY_QUERY: 'salary_query',
+  IT_QUERY: 'it_query',
+  BENEFITS_QUERY: 'benefits_query',
+  GENERAL: 'general',
+});
+
+const HR_REQUEST_STATUS = Object.freeze({
+  OPEN: 'open',
+  IN_PROGRESS: 'in_progress',
+  WAITING_ON_EMPLOYEE: 'waiting_on_employee',
+  RESOLVED: 'resolved',
+  CANCELLED: 'cancelled',
+});
+
+const CHAT_SENDER_TYPE = Object.freeze({
+  EMPLOYEE: 'employee',
+  HR: 'hr',
+  HR_MANAGER: 'hr_manager',
+  DEPT_LEAD: 'dept_lead',
+  AI_BOT: 'ai_bot',
+  SYSTEM: 'system',
+});
+
 module.exports = {
   ROLES,
   PERMISSIONS,
@@ -160,4 +268,13 @@ module.exports = {
   ADVANCE_SALARY_REPAYMENT_MODE,
   PAYMENT_METHOD_TYPE,
   BONUS_TYPE,
+  ATTENDANCE_STATUS,
+  TIME_OFF_UNIT,
+  TIME_OFF_REQUEST_STATUS,
+  TIME_OFF_ALLOCATION_STATUS,
+  FEEDBACK_CATEGORY,
+  FEEDBACK_STATUS,
+  HR_REQUEST_TYPE,
+  HR_REQUEST_STATUS,
+  CHAT_SENDER_TYPE,
 };

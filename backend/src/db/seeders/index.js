@@ -2,11 +2,13 @@
 
 const rolesSeeder = require('./seedRolesAndPermissions');
 const orgSeeder = require('./seedDefaultOrgAndAdmin');
+const hrSeeder = require('./seedDefaultHrData');
 const logger = require('../../config/logger');
 
 async function runAll() {
   await rolesSeeder.seed();
   await orgSeeder.seed();
+  await hrSeeder.seed();
   logger.info('All seeders completed');
 }
 

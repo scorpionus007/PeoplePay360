@@ -11,6 +11,7 @@ module.exports = (sequelize) => {
       organization_id: { type: DataTypes.UUID, allowNull: false },
       department_id: { type: DataTypes.UUID, allowNull: true },
       manager_id: { type: DataTypes.UUID, allowNull: true },
+      working_schedule_id: { type: DataTypes.UUID, allowNull: true },
       employee_number: { type: DataTypes.STRING(50), allowNull: false },
       first_name: { type: DataTypes.STRING(100), allowNull: false },
       last_name: { type: DataTypes.STRING(100), allowNull: false },
@@ -70,6 +71,34 @@ module.exports = (sequelize) => {
     Employee.hasMany(models.AdvanceSalaryRequest, { as: 'advance_requests', foreignKey: 'employee_id' });
     Employee.hasMany(models.BonusRecord, { as: 'bonuses', foreignKey: 'employee_id' });
     Employee.hasMany(models.PaymentMethod, { as: 'payment_methods', foreignKey: 'employee_id' });
+
+    if (models.WorkingSchedule) {
+      Employee.belongsTo(models.WorkingSchedule, {
+        as: 'working_schedule',
+        foreignKey: 'working_schedule_id',
+      });
+    }
+    if (models.Attendance) {
+      Employee.hasMany(models.Attendance, { as: 'attendances', foreignKey: 'employee_id' });
+    }
+    if (models.TimeOffAllocation) {
+      Employee.hasMany(models.TimeOffAllocation, {
+        as: 'time_off_allocations',
+        foreignKey: 'employee_id',
+      });
+    }
+    if (models.TimeOffRequest) {
+      Employee.hasMany(models.TimeOffRequest, {
+        as: 'time_off_requests',
+        foreignKey: 'employee_id',
+      });
+    }
+    if (models.HRRequest) {
+      Employee.hasMany(models.HRRequest, { as: 'hr_requests', foreignKey: 'employee_id' });
+    }
+    if (models.FeedbackEntry) {
+      Employee.hasMany(models.FeedbackEntry, { as: 'feedback_entries', foreignKey: 'employee_id' });
+    }
   };
 
   Employee.prototype.fullName = function fullName() {

@@ -16,6 +16,18 @@ const Currency = require('./Currency')(sequelize);
 const ExchangeRate = require('./ExchangeRate')(sequelize);
 const AuditLog = require('./AuditLog')(sequelize);
 
+// HR module models
+const WorkingSchedule = require('../modules/hr/models/WorkingSchedule')(sequelize);
+const WorkingScheduleDay = require('../modules/hr/models/WorkingScheduleDay')(sequelize);
+const Attendance = require('../modules/hr/models/Attendance')(sequelize);
+const TimeOffType = require('../modules/hr/models/TimeOffType')(sequelize);
+const TimeOffAllocation = require('../modules/hr/models/TimeOffAllocation')(sequelize);
+const TimeOffRequest = require('../modules/hr/models/TimeOffRequest')(sequelize);
+const FeedbackEntry = require('../modules/hr/models/FeedbackEntry')(sequelize);
+const HRRequest = require('../modules/hr/models/HRRequest')(sequelize);
+const HRRequestMessage = require('../modules/hr/models/HRRequestMessage')(sequelize);
+const HRAnnouncement = require('../modules/hr/models/HRAnnouncement')(sequelize);
+
 // Payroll module models
 const SalaryStructure = require('../modules/payroll/models/SalaryStructure')(sequelize);
 const SalaryRule = require('../modules/payroll/models/SalaryRule')(sequelize);
@@ -45,6 +57,16 @@ const models = {
   Currency,
   ExchangeRate,
   AuditLog,
+  WorkingSchedule,
+  WorkingScheduleDay,
+  Attendance,
+  TimeOffType,
+  TimeOffAllocation,
+  TimeOffRequest,
+  FeedbackEntry,
+  HRRequest,
+  HRRequestMessage,
+  HRAnnouncement,
   SalaryStructure,
   SalaryRule,
   SalaryStructureRule,
