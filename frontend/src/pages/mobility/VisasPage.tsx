@@ -12,16 +12,16 @@ import { Input, Select, Textarea } from '../../components/Input';
 import { useToast } from '../../components/Toast';
 import { formatDate, humanizeEnum } from '../../utils/format';
 
-const VISA_TYPES = ['h1b', 'l1', 'o1', 'tn', 'e3', 'green_card', 'schengen', 'blue_card', 'skilled_worker', 'tier2', 'other'];
-const STATUSES = ['requested', 'in_preparation', 'submitted', 'approved', 'rejected', 'expired', 'renewed', 'withdrawn'];
-const DOC_TYPES = ['passport_scan', 'previous_visa', 'employment_letter', 'offer_letter', 'degree', 'photo', 'sponsorship', 'travel_history', 'other'];
+const VISA_TYPES = ['work_visa', 'business_visa', 'dependent_visa', 'permanent_residency', 'student_visa', 'transit', 'digital_nomad', 'other'];
+const VISA_STATUSES = ['initiated', 'documents_collecting', 'under_internal_review', 'filed', 'rfe_pending', 'approved', 'denied', 'expired', 'renewed', 'cancelled'];
 
 export function VisasPage() {
   const toast = useToast();
   const [openForm, setOpenForm] = useState(false);
   const [docOpen, setDocOpen] = useState<any>(null);
+  const [docDetail, setDocDetail] = useState<any>(null);
   const [form, setForm] = useState<any>(defaults());
-  const [docForm, setDocForm] = useState<any>({ document_type: 'passport_scan', file_reference: '', file_url: '', notes: '' });
+  const [docForm, setDocForm] = useState<any>({ document_type: 'passport', title: '', file_url: '', note: '' });
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['visa.cases'],
@@ -32,17 +32,20 @@ export function VisasPage() {
     queryFn: async () => (await api.get('/employees', { params: { limit: 200 } })).data.data as any[],
   });
   const partnersQ = useQuery({
-    queryKey: ['mobility.partners', 'immigration'],
-    queryFn: async () => (await api.get('/mobility/partners', { params: { category: 'immigration_lawyer' } })).data.data as any[],
+    queryKey: ['mobility.partners'],
+    queryFn: async () => (await api.get('/mobility/partners')).data.data as any[],
   });
 
   const save = async () => {
     try {
       await api.post('/mobility/visas', {
-        ...form,
-        partner_id: form.partner_id || null,
-        application_date: form.application_date || null,
-        expiry_date: form.expiry_date || null,
+        employee_id: form.employee_id,
+        mobility_partner_id: form.mobility_partner_id || null,
+        visa_type: form.visa_type,
+        country_code: form.country_code,
+        visa_category: form.visa_category || null,
+        priority: form.priority,
+        total_cost_amount: form.total_cost_amount ? Number(form.total_cost_amount) : null,
       });
       toast.success('Visa case created');
       setOpenForm(false);
@@ -53,9 +56,9 @@ export function VisasPage() {
     }
   };
 
-  const advance = async (id: string, status: string) => {
+  const transition = async (id: string, status: string) => {
     try {
-      await api.patch(`/mobility/visas/${id}/status`, { status });
+      await api.post(`/mobility/visas/${id}/transition`, { status });
       toast.success('Status updated');
       refetch();
     } catch (err) {
@@ -63,13 +66,28 @@ export function VisasPage() {
     }
   };
 
+  const openDocs = async (row: any) => {
+    setDocOpen(row);
+    setDocDetail(null);
+    try {
+      const full = (await api.get(`/mobility/visas/${row.id}`)).data.data;
+      setDocDetail(full);
+    } catch (err) {
+      toast.error('Could not load documents', extractApiError(err));
+    }
+  };
+
   const uploadDoc = async () => {
     try {
-      await api.post(`/mobility/visas/${docOpen.id}/documents`, docForm);
+      await api.post(`/mobility/visas/${docOpen.id}/documents`, {
+        document_type: docForm.document_type,
+        title: docForm.title,
+        file_url: docForm.file_url || null,
+        note: docForm.note || null,
+      });
       toast.success('Document added');
-      setDocOpen(null);
-      setDocForm({ document_type: 'passport_scan', file_reference: '', file_url: '', notes: '' });
-      refetch();
+      setDocForm({ document_type: 'passport', title: '', file_url: '', note: '' });
+      openDocs(docOpen);
     } catch (err) {
       toast.error('Save failed', extractApiError(err));
     }
@@ -87,19 +105,19 @@ export function VisasPage() {
         rows={data || []}
         empty={<EmptyState icon={<Globe2 size={22} />} title="No visa cases" action={<Button onClick={() => setOpenForm(true)}>New case</Button>} />}
         columns={[
-          { key: 'emp', header: 'Employee', render: (r: any) => r.employee ? <div><div style={{ fontWeight: 600 }}>{r.employee.first_name} {r.employee.last_name}</div>{r.employee.email && <div className="pp-soft" style={{ fontSize: 12 }}>{r.employee.email}</div>}</div> : <span className="pp-soft">-</span> },
-          { key: 'type', header: 'Type', render: (r: any) => <Badge tone="primary">{humanizeEnum(r.visa_type)}</Badge>, width: '130px' },
-          { key: 'country', header: 'Country', render: (r: any) => `${r.destination_country}${r.destination_region ? ` / ${r.destination_region}` : ''}`, width: '150px' },
-          { key: 'applied', header: 'Applied', render: (r: any) => r.application_date ? formatDate(r.application_date) : <span className="pp-soft">-</span>, width: '110px' },
-          { key: 'expiry', header: 'Expiry', render: (r: any) => r.expiry_date ? formatDate(r.expiry_date) : <span className="pp-soft">-</span>, width: '110px' },
+          { key: 'emp', header: 'Employee', render: (r: any) => r.employee ? <div><div style={{ fontWeight: 600 }}>{r.employee.first_name} {r.employee.last_name}</div><div className="pp-soft" style={{ fontSize: 12 }}>{r.case_code}</div></div> : <span className="pp-soft">-</span> },
+          { key: 'type', header: 'Type', render: (r: any) => <Badge tone="primary">{humanizeEnum(r.visa_type)}</Badge>, width: '150px' },
+          { key: 'country', header: 'Country', render: (r: any) => r.country_code, width: '90px' },
+          { key: 'requested', header: 'Requested', render: (r: any) => r.requested_at ? formatDate(r.requested_at) : <span className="pp-soft">-</span>, width: '120px' },
+          { key: 'valid', header: 'Valid to', render: (r: any) => r.valid_to ? formatDate(r.valid_to) : <span className="pp-soft">-</span>, width: '120px' },
           { key: 'partner', header: 'Partner', render: (r: any) => r.partner?.name || <span className="pp-soft">-</span> },
           { key: 'status', header: 'Status', render: (r: any) => (
-            <Select value={r.status} onChange={(e) => advance(r.id, e.target.value)}>
-              {STATUSES.map((s) => <option key={s} value={s}>{humanizeEnum(s)}</option>)}
+            <Select value={r.status} onChange={(e) => transition(r.id, e.target.value)}>
+              {VISA_STATUSES.map((s) => <option key={s} value={s}>{humanizeEnum(s)}</option>)}
             </Select>
-          ), width: '160px' },
-          { key: 'actions', header: '', width: '120px', render: (r: any) => (
-            <Button size="sm" variant="subtle" leftIcon={<FileText size={14} />} onClick={() => setDocOpen(r)}>Docs</Button>
+          ), width: '180px' },
+          { key: 'actions', header: '', width: '110px', render: (r: any) => (
+            <Button size="sm" variant="subtle" leftIcon={<FileText size={14} />} onClick={() => openDocs(r)}>Docs</Button>
           ) },
         ]}
       />
@@ -113,18 +131,16 @@ export function VisasPage() {
           <Select label="Visa type" required value={form.visa_type} onChange={(e) => setForm({ ...form, visa_type: e.target.value })}>
             {VISA_TYPES.map((t) => <option key={t} value={t}>{humanizeEnum(t)}</option>)}
           </Select>
-          <Input label="Destination country (ISO2)" required maxLength={2} value={form.destination_country} onChange={(e) => setForm({ ...form, destination_country: e.target.value.toUpperCase() })} />
-          <Input label="Destination region" value={form.destination_region} onChange={(e) => setForm({ ...form, destination_region: e.target.value })} />
-          <Select label="Immigration partner" value={form.partner_id} onChange={(e) => setForm({ ...form, partner_id: e.target.value })}>
+          <Input label="Country (ISO2)" required maxLength={2} value={form.country_code} onChange={(e) => setForm({ ...form, country_code: e.target.value.toUpperCase() })} />
+          <Input label="Visa category" value={form.visa_category} onChange={(e) => setForm({ ...form, visa_category: e.target.value })} />
+          <Select label="Immigration partner" value={form.mobility_partner_id} onChange={(e) => setForm({ ...form, mobility_partner_id: e.target.value })}>
             <option value="">None</option>
             {(partnersQ.data || []).map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </Select>
-          <Input label="Application date" type="date" value={form.application_date} onChange={(e) => setForm({ ...form, application_date: e.target.value })} />
-          <Input label="Expiry date" type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} />
-          <Input label="Reference number" value={form.reference_number} onChange={(e) => setForm({ ...form, reference_number: e.target.value })} />
-          <div style={{ gridColumn: '1 / -1' }}>
-            <Textarea label="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-          </div>
+          <Select label="Priority" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+            {['low', 'normal', 'high', 'urgent'].map((p) => <option key={p} value={p}>{humanizeEnum(p)}</option>)}
+          </Select>
+          <Input label="Total cost" type="number" step="0.01" value={form.total_cost_amount} onChange={(e) => setForm({ ...form, total_cost_amount: e.target.value })} />
         </div>
       </Modal>
 
@@ -133,25 +149,25 @@ export function VisasPage() {
           <div className="pp-stack">
             <div style={{ padding: 12, background: 'var(--pp-surface-2)', border: '1px solid var(--pp-border)', borderRadius: 'var(--pp-radius-md)' }}>
               <div style={{ fontWeight: 600, marginBottom: 8 }}>Existing documents</div>
-              {(docOpen.documents || []).length === 0 && <div className="pp-soft">No documents yet</div>}
-              {(docOpen.documents || []).map((d: any) => (
+              {!docDetail && <div className="pp-soft">Loading...</div>}
+              {docDetail && (docDetail.documents || []).length === 0 && <div className="pp-soft">No documents yet</div>}
+              {docDetail && (docDetail.documents || []).map((d: any) => (
                 <div key={d.id} className="pp-row" style={{ justifyContent: 'space-between', padding: '6px 0', borderTop: '1px dashed var(--pp-border)' }}>
                   <div>
-                    <Badge tone="neutral">{humanizeEnum(d.document_type)}</Badge>
-                    <span className="pp-mono" style={{ marginLeft: 8, fontSize: 12 }}>{d.file_reference}</span>
+                    <Badge tone={statusTone(d.status)}>{humanizeEnum(d.status)}</Badge>
+                    <span style={{ marginLeft: 8, fontWeight: 600 }}>{d.title}</span>
+                    <span className="pp-soft" style={{ marginLeft: 8, fontSize: 12 }}>{humanizeEnum(d.document_type)}</span>
                   </div>
                   {d.file_url && <a href={d.file_url} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>Open</a>}
                 </div>
               ))}
             </div>
             <div className="pp-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-              <Select label="Document type" value={docForm.document_type} onChange={(e) => setDocForm({ ...docForm, document_type: e.target.value })}>
-                {DOC_TYPES.map((t) => <option key={t} value={t}>{humanizeEnum(t)}</option>)}
-              </Select>
-              <Input label="File reference" required value={docForm.file_reference} onChange={(e) => setDocForm({ ...docForm, file_reference: e.target.value })} />
+              <Input label="Document type" required value={docForm.document_type} onChange={(e) => setDocForm({ ...docForm, document_type: e.target.value })} />
+              <Input label="Title" required value={docForm.title} onChange={(e) => setDocForm({ ...docForm, title: e.target.value })} />
               <Input label="File URL" value={docForm.file_url} onChange={(e) => setDocForm({ ...docForm, file_url: e.target.value })} />
               <div style={{ gridColumn: '1 / -1' }}>
-                <Textarea label="Notes" value={docForm.notes} onChange={(e) => setDocForm({ ...docForm, notes: e.target.value })} />
+                <Textarea label="Note" value={docForm.note} onChange={(e) => setDocForm({ ...docForm, note: e.target.value })} />
               </div>
             </div>
           </div>
@@ -163,7 +179,7 @@ export function VisasPage() {
 
 function defaults() {
   return {
-    employee_id: '', visa_type: 'h1b', destination_country: '', destination_region: '',
-    partner_id: '', application_date: '', expiry_date: '', reference_number: '', notes: '',
+    employee_id: '', visa_type: 'work_visa', country_code: '', visa_category: '',
+    mobility_partner_id: '', priority: 'normal', total_cost_amount: '',
   };
 }
