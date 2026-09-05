@@ -3,6 +3,7 @@ import { Calendar, Handshake, Laptop, Plane, MessageSquare } from 'lucide-react'
 import { useAuth } from './auth/AuthContext';
 import { AppShell } from './layout/AppShell';
 import { LoginPage } from './pages/Login';
+import { LandingPage } from './pages/Landing';
 import { DashboardPage } from './pages/Dashboard';
 import { NotFoundPage } from './pages/NotFound';
 import { PlaceholderPage } from './pages/Placeholder';
@@ -44,6 +45,7 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route
         element={
@@ -52,7 +54,7 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="/" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
 
         <Route path="/employees" element={<EmployeesPage />} />
         <Route path="/departments" element={<DepartmentsPage />} />

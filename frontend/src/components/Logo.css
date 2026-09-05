@@ -1,0 +1,41 @@
+.pp-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  font-family: 'Nunito', 'Inter', system-ui, sans-serif;
+  line-height: 1;
+  user-select: none;
+}
+.pp-logo--stacked { flex-direction: column; gap: 12px; align-items: center; }
+
+.pp-logo__mark-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: currentColor;
+}
+.pp-logo__mark-wrap svg { display: block; width: 100%; height: 100%; }
+
+.pp-logo__wordmark {
+  position: relative;
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  color: currentColor;
+  white-space: nowrap;
+  padding-right: 12px;
+}
+.pp-logo__wordmark-num { margin-left: 0.02em; }
+
+/* Degree mark after final 0 */
+.pp-logo__wordmark-deg {
+  position: absolute;
+  top: 0.02em;
+  right: 0;
+  width: 0.22em;
+  height: 0.22em;
+  border-radius: 50%;
+  border: 0.05em solid currentColor;
+  display: inline-block;
+}

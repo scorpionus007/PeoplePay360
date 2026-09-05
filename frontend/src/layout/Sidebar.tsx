@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../auth/AuthContext';
+import { Logo } from '../components/Logo';
 import './Sidebar.css';
 
 type Item = { to: string; label: string; icon: React.ComponentType<any>; anyPerm?: string[] };
@@ -29,7 +30,7 @@ type Group = { label: string; items: Item[] };
 const NAV: Group[] = [
   {
     label: 'Overview',
-    items: [{ to: '/', label: 'Dashboard', icon: LayoutDashboard }],
+    items: [{ to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
   },
   {
     label: 'Organization',
@@ -95,12 +96,11 @@ export function Sidebar() {
   return (
     <aside className="pp-sidebar">
       <div className="pp-sidebar__brand">
-        <div className="pp-sidebar__logo" aria-hidden="true">P</div>
-        <div className="pp-sidebar__brand-text">
-          <div className="pp-sidebar__brand-name">PeoplePay360</div>
-          <div className="pp-sidebar__brand-org">{user?.organization?.name || 'Workspace'}</div>
-        </div>
+        <Logo size={28} />
       </div>
+      {user?.organization?.name && (
+        <div className="pp-sidebar__org">{user.organization.name}</div>
+      )}
 
       <nav className="pp-sidebar__nav">
         {NAV.map((group) => {
@@ -113,7 +113,7 @@ export function Sidebar() {
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.to === '/'}
+                  end={item.to === '/dashboard'}
                   className={({ isActive }) => clsx('pp-sidebar__link', isActive && 'pp-sidebar__link--active')}
                 >
                   <span className="pp-sidebar__link-icon">

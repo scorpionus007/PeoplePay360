@@ -4,6 +4,7 @@ import { AtSign, Lock, ArrowRight } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { Logo } from '../components/Logo';
 import { extractApiError } from '../api/client';
 import './Login.css';
 
@@ -15,7 +16,7 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  if (!loading && user) return <Navigate to="/" replace />;
+  if (!loading && user) return <Navigate to="/dashboard" replace />;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -23,7 +24,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(extractApiError(err));
     } finally {
@@ -35,8 +36,7 @@ export function LoginPage() {
     <div className="pp-login">
       <div className="pp-login__left">
         <div className="pp-login__brand">
-          <div className="pp-login__logo">P</div>
-          <span>PeoplePay360</span>
+          <Logo size={30} />
         </div>
         <div className="pp-login__card">
           <h1 className="pp-login__title">Welcome back</h1>

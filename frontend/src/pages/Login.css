@@ -16,26 +16,7 @@
   gap: 32px;
 }
 
-.pp-login__brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: -0.01em;
-}
-.pp-login__logo {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--pp-radius-md);
-  background: linear-gradient(135deg, var(--pp-primary-500), var(--pp-primary-700));
-  color: var(--pp-white);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  box-shadow: 0 4px 14px rgba(91, 71, 255, 0.3);
-}
+.pp-login__brand { color: var(--pp-text); }
 
 .pp-login__card {
   flex: 1;
