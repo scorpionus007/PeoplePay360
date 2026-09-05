@@ -10,6 +10,32 @@ const {
 
 const TERMINAL_STAGES = [APPLICATION_STAGE.HIRED, APPLICATION_STAGE.REJECTED, APPLICATION_STAGE.WITHDRAWN];
 
+// Forward-only pipeline order. reject/withdraw/on_hold are escapes reachable
+// from any non-terminal stage; on_hold can resume to any forward stage.
+const STAGE_ORDER = [
+  APPLICATION_STAGE.APPLIED,
+  APPLICATION_STAGE.SCREENING,
+  APPLICATION_STAGE.PHONE_SCREEN,
+  APPLICATION_STAGE.ASSESSMENT,
+  APPLICATION_STAGE.INTERVIEW,
+  APPLICATION_STAGE.ONSITE,
+  APPLICATION_STAGE.OFFER,
+  APPLICATION_STAGE.HIRED,
+];
+const STAGE_ESCAPES = [APPLICATION_STAGE.REJECTED, APPLICATION_STAGE.WITHDRAWN, APPLICATION_STAGE.ON_HOLD];
+
+function assertValidTransition(from, to) {
+  if (STAGE_ESCAPES.includes(to)) return;
+  if (to === APPLICATION_STAGE.HIRED && from !== APPLICATION_STAGE.OFFER) {
+    throw AppError.conflict('An application can only be marked hired from the offer stage');
+  }
+  if (from === APPLICATION_STAGE.ON_HOLD) return; // resume from hold
+  const fi = STAGE_ORDER.indexOf(from);
+  const ti = STAGE_ORDER.indexOf(to);
+  if (fi === -1 || ti === -1) throw AppError.conflict('Unknown application stage transition');
+  if (ti <= fi) throw AppError.conflict('An application cannot move backward in the pipeline');
+}
+
 async function moveStage({ organizationId, applicationId, toStage, actorUserId, note, rejectionReason }) {
   return sequelize.transaction(async (transaction) => {
     const application = await models.Application.findOne({
@@ -22,6 +48,8 @@ async function moveStage({ organizationId, applicationId, toStage, actorUserId, 
     if (TERMINAL_STAGES.includes(application.current_stage)) {
       throw AppError.conflict('Application is already in a terminal stage');
     }
+
+    assertValidTransition(application.current_stage, toStage);
 
     const fromStage = application.current_stage;
     await models.ApplicationStageHistory.create(
@@ -43,8 +71,15 @@ async function moveStage({ organizationId, applicationId, toStage, actorUserId, 
     await application.save({ transaction });
 
     if (toStage === APPLICATION_STAGE.HIRED) {
-      const req = await models.Requisition.findByPk(application.requisition_id, { transaction });
+      const req = await models.Requisition.findOne({
+        where: { id: application.requisition_id, organization_id: organizationId },
+        lock: transaction.LOCK.UPDATE,
+        transaction,
+      });
       if (req) {
+        if (Number(req.headcount_filled || 0) >= Number(req.headcount || 0)) {
+          throw AppError.conflict('Requisition headcount is already filled');
+        }
         req.headcount_filled = Number(req.headcount_filled || 0) + 1;
         if (req.headcount_filled >= req.headcount) req.status = REQUISITION_STATUS.FILLED;
         await req.save({ transaction });

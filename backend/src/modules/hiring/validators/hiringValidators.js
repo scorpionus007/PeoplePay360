@@ -43,7 +43,8 @@ exports.createRequisition = Joi.object({
   salary_period: Joi.string().valid('hourly', 'daily', 'weekly', 'monthly', 'yearly').default('yearly'),
   target_start_date: Joi.date().iso().allow(null),
   priority: Joi.string().valid('low', 'normal', 'high', 'urgent').default('normal'),
-  status: Joi.string().valid(...Object.values(REQUISITION_STATUS)).default('draft'),
+  // status is intentionally NOT settable here; requisitions start as draft and
+  // move through the dedicated submit/approve/hold/cancel endpoints.
 });
 exports.updateRequisition = exports.createRequisition.fork(['code', 'title'], (s) => s.optional()).keys({});
 exports.approveRequisition = Joi.object({ note: Joi.string().max(1000).allow(null, '') });
@@ -67,9 +68,13 @@ exports.createJobPosting = Joi.object({
   external_reference: Joi.string().max(200).allow(null, ''),
   external_url: Joi.string().uri().max(1000).allow(null, ''),
   published_content: Joi.string().allow(null, ''),
-  status: Joi.string().valid(...Object.values(JOB_POSTING_STATUS)).default('draft'),
+  // status is not settable here; use the publish/close endpoints. requisition_id
+  // is not re-pointable on update below (removed from the update fork).
 });
-exports.updateJobPosting = exports.createJobPosting.fork(['requisition_id', 'title'], (s) => s.optional()).keys({});
+exports.updateJobPosting = exports.createJobPosting
+  .fork(['title'], (s) => s.optional())
+  .fork(['requisition_id'], (s) => s.forbidden())
+  .keys({});
 
 exports.createCandidate = Joi.object({
   first_name: Joi.string().max(100).required(),
