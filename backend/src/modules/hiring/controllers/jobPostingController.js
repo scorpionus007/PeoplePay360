@@ -61,6 +61,13 @@ async function publish(req, res) {
   });
   if (!row) throw AppError.notFound('Job posting not found');
   if (row.status === JOB_POSTING_STATUS.PUBLISHED) return success(res, row);
+  // Re-assert the linked requisition is still approved and in-org before going live.
+  const requisition = await models.Requisition.findOne({
+    where: { id: row.requisition_id, organization_id: req.user.organizationId },
+  });
+  if (!requisition || requisition.status !== REQUISITION_STATUS.APPROVED) {
+    throw AppError.conflict('The linked requisition must be approved to publish this posting');
+  }
   row.status = JOB_POSTING_STATUS.PUBLISHED;
   row.published_at = new Date();
   await row.save();

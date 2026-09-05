@@ -77,6 +77,7 @@ async function cancel(req, res) {
 
 async function submitFeedback(req, res) {
   const row = await interview.submitFeedback({
+    organizationId: req.user.organizationId,
     interviewId: req.params.id,
     panelistUserId: req.user.id,
     panelistRole: req.body.panelist_role,

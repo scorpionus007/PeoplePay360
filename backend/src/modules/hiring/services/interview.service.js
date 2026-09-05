@@ -60,9 +60,9 @@ async function schedule({ organizationId, applicationId, payload, actorUserId })
   });
 }
 
-async function submitFeedback({ interviewId, panelistUserId, panelistRole, overallRating, recommendation, strengths, concerns, questionsAsked, notes, criteriaScores }) {
+async function submitFeedback({ organizationId, interviewId, panelistUserId, panelistRole, overallRating, recommendation, strengths, concerns, questionsAsked, notes, criteriaScores }) {
   return sequelize.transaction(async (transaction) => {
-    const interview = await models.Interview.findByPk(interviewId, { transaction });
+    const interview = await models.Interview.findOne({ where: { id: interviewId, organization_id: organizationId }, transaction });
     if (!interview) throw AppError.notFound('Interview not found');
     if ([INTERVIEW_STATUS.CANCELLED, INTERVIEW_STATUS.NO_SHOW].includes(interview.status)) {
       throw AppError.conflict('Cannot submit feedback for cancelled or no-show interview');
