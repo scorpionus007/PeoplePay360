@@ -54,3 +54,16 @@ coverage/
 
 # Local overrides
 *.local
+
+# Android & React Native
+.gradle/
+**/android/.gradle/
+**/android/app/build/
+**/android/build/
+**/android/local.properties
+**/android/app/src/main/assets/index.android.bundle
+**/android/app/src/main/res/drawable-*/
+**/android/app/src/main/res/raw/
+.metro-health-check*
+*.keystore
+!**/debug.keystore
