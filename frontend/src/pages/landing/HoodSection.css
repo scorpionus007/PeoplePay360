@@ -36,9 +36,9 @@
 
 .pp-hood__body {
   margin: 20px 0 0;
-  font-size: 17px;
-  line-height: 1.6;
-  letter-spacing: -0.015em;
+  font-size: var(--pp-copy-size);
+  line-height: var(--pp-copy-leading);
+  letter-spacing: var(--pp-copy-tracking);
   max-width: none;
   color: #000;
 }

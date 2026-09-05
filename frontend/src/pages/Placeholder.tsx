@@ -10,7 +10,7 @@ export function PlaceholderPage({ title, subtitle, module, icon }: { title: stri
       <Card>
         <CardBody>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '56px 16px', textAlign: 'center' }}>
-            <div style={{ width: 64, height: 64, borderRadius: 16, background: 'linear-gradient(135deg, var(--pp-primary-500), var(--pp-primary-700))', color: 'var(--pp-white)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 28px rgba(91, 71, 255, 0.28)' }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, background: 'linear-gradient(135deg, var(--pp-primary-500), var(--pp-primary-700))', color: 'var(--pp-white)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 28px rgba(233, 227, 247, 0.7)' }}>
               {icon || <Sparkles size={26} />}
             </div>
             <h2 style={{ letterSpacing: '-0.02em' }}>{module} module is on the way</h2>
