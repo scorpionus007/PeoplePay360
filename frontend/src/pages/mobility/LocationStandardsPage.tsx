@@ -24,8 +24,17 @@ export function LocationStandardsPage() {
 
   const save = async () => {
     try {
-      const payload: any = { ...form, standard_weekly_hours: Number(form.standard_weekly_hours), minimum_pto_days: Number(form.minimum_pto_days), minimum_sick_days: Number(form.minimum_sick_days), overtime_multiplier: Number(form.overtime_multiplier) };
-      if (form.notice_period_days) payload.notice_period_days = Number(form.notice_period_days);
+      const payload: any = {
+        ...form,
+        region_code: form.region_code || null,
+        city: form.city || null,
+        standard_weekly_hours: Number(form.standard_weekly_hours),
+        minimum_pto_days: Number(form.minimum_pto_days),
+        minimum_sick_days: Number(form.minimum_sick_days),
+        overtime_multiplier: Number(form.overtime_multiplier),
+        // Blank numeric optional must be null, not '' (Joi rejects '').
+        notice_period_days: form.notice_period_days ? Number(form.notice_period_days) : null,
+      };
       await api.post('/mobility/location-standards', payload);
       toast.success('Location standard created');
       setOpenForm(false);
