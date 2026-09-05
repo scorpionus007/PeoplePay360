@@ -28,10 +28,14 @@ function createApp() {
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     })
   );
+  // Never reflect an arbitrary origin together with credentials. When
+  // CORS_ORIGIN is '*' we allow any origin but disable credentialed requests;
+  // otherwise we use an explicit allowlist with credentials enabled.
+  const corsWildcard = env.cors.origin === '*';
   app.use(
     cors({
-      origin: env.cors.origin === '*' ? true : env.cors.origin.split(',').map((s) => s.trim()),
-      credentials: true,
+      origin: corsWildcard ? true : env.cors.origin.split(',').map((s) => s.trim()),
+      credentials: !corsWildcard,
     })
   );
   app.use(compression());

@@ -82,4 +82,21 @@ const env = {
   },
 };
 
+// In production, refuse to boot with the insecure development defaults so an
+// operator can never accidentally sign tokens with a secret that is public in
+// the source tree, or run against the default database password.
+if (env.nodeEnv === 'production') {
+  const insecure = [];
+  if (!process.env.JWT_ACCESS_SECRET || env.jwt.accessSecret === 'change_me_access_secret') insecure.push('JWT_ACCESS_SECRET');
+  if (!process.env.JWT_REFRESH_SECRET || env.jwt.refreshSecret === 'change_me_refresh_secret') insecure.push('JWT_REFRESH_SECRET');
+  if (!process.env.DB_PASSWORD || env.db.password === 'peoplepay_local_dev') insecure.push('DB_PASSWORD');
+  if (env.jwt.accessSecret === env.jwt.refreshSecret) insecure.push('JWT_ACCESS_SECRET must differ from JWT_REFRESH_SECRET');
+  if (env.cors.origin === '*') insecure.push('CORS_ORIGIN must not be "*" in production');
+  if (insecure.length) {
+    throw new Error(
+      `Refusing to start in production with insecure/default configuration: ${insecure.join(', ')}. Set strong values in the environment.`
+    );
+  }
+}
+
 module.exports = env;

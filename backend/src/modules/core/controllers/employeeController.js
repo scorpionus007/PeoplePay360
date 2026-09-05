@@ -45,16 +45,44 @@ async function getOne(req, res) {
   return success(res, row);
 }
 
+async function assertOrgOwned(model, id, orgId, label) {
+  if (!id) return;
+  const found = await model.findOne({ where: { id, organization_id: orgId } });
+  if (!found) throw AppError.unprocessable(`${label} does not belong to your organization`);
+}
+
+// Walk the manager chain to ensure setting employeeId's manager to managerId
+// does not create a cycle (A manages B manages ... manages A).
+async function assertNoManagerCycle(employeeId, managerId, orgId) {
+  let current = managerId;
+  const seen = new Set(employeeId ? [employeeId] : []);
+  while (current) {
+    if (seen.has(current)) throw AppError.unprocessable('Manager assignment creates a reporting cycle');
+    seen.add(current);
+    const mgr = await models.Employee.findOne({ where: { id: current, organization_id: orgId }, attributes: ['id', 'manager_id'] });
+    current = mgr ? mgr.manager_id : null;
+  }
+}
+
 async function create(req, res) {
-  const row = await models.Employee.create({ ...req.body, organization_id: req.user.organizationId });
+  const orgId = req.user.organizationId;
+  await assertOrgOwned(models.Department, req.body.department_id, orgId, 'Department');
+  await assertOrgOwned(models.Employee, req.body.manager_id, orgId, 'Manager');
+  if (req.body.manager_id) await assertNoManagerCycle(null, req.body.manager_id, orgId);
+  const row = await models.Employee.create({ ...req.body, organization_id: orgId });
   return created(res, row);
 }
 
 async function update(req, res) {
-  const row = await models.Employee.findOne({
-    where: { id: req.params.id, organization_id: req.user.organizationId },
-  });
+  const orgId = req.user.organizationId;
+  const row = await models.Employee.findOne({ where: { id: req.params.id, organization_id: orgId } });
   if (!row) throw AppError.notFound('Employee not found');
+  await assertOrgOwned(models.Department, req.body.department_id, orgId, 'Department');
+  await assertOrgOwned(models.Employee, req.body.manager_id, orgId, 'Manager');
+  if (req.body.manager_id) {
+    if (req.body.manager_id === row.id) throw AppError.unprocessable('An employee cannot be their own manager');
+    await assertNoManagerCycle(row.id, req.body.manager_id, orgId);
+  }
   await row.update(req.body);
   return success(res, row);
 }

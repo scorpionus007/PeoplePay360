@@ -29,6 +29,17 @@ function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+// A valid-format bcrypt hash used to equalize login timing when the account
+// does not exist, so an attacker cannot distinguish "no such user" from
+// "wrong password" by response time. Computed once, lazily.
+let dummyHash = null;
+async function getDummyHash() {
+  if (!dummyHash) dummyHash = await hashPassword('peoplepay360-timing-equalizer');
+  return dummyHash;
+}
+
+const ROLES = require('../../config/constants').ROLES;
+
 async function loadUserWithRoles(userId) {
   return models.User.findByPk(userId, {
     include: [
@@ -98,11 +109,19 @@ async function issueTokens({ user, ip, userAgent }) {
 
 async function login({ email, password, ip, userAgent }) {
   const user = await models.User.scope('withPassword').findOne({ where: { email: String(email).toLowerCase() } });
-  if (!user) throw AppError.unauthorized('Invalid credentials');
-  if (!user.is_active) throw AppError.forbidden('Account is deactivated');
+  if (!user) {
+    // Burn an equivalent bcrypt comparison so timing does not reveal that the
+    // account is absent, then return the same generic error.
+    await verifyPassword(password, await getDummyHash());
+    throw AppError.unauthorized('Invalid credentials');
+  }
 
   const ok = await verifyPassword(password, user.password_hash);
   if (!ok) throw AppError.unauthorized('Invalid credentials');
+
+  // Only reveal deactivation to a caller who already proved the password, so it
+  // cannot be used for account enumeration.
+  if (!user.is_active) throw AppError.forbidden('Account is deactivated');
 
   user.last_login_at = new Date();
   await user.save();
@@ -122,7 +141,16 @@ async function refresh({ refreshToken, ip, userAgent }) {
 
   const record = await models.RefreshToken.findOne({ where: { token_id: payload.tid, user_id: payload.sub } });
   if (!record) throw AppError.unauthorized('Refresh token not recognized');
-  if (record.revoked_at) throw AppError.unauthorized('Refresh token has been revoked');
+  if (record.revoked_at) {
+    // Reuse of an already-rotated token indicates the token was stolen and
+    // replayed. Revoke the entire token family for this user so neither the
+    // attacker's nor the victim's descendant tokens remain valid.
+    await models.RefreshToken.update(
+      { revoked_at: new Date() },
+      { where: { user_id: payload.sub, revoked_at: null } }
+    );
+    throw AppError.unauthorized('Refresh token has been revoked');
+  }
   if (record.expires_at < new Date()) throw AppError.unauthorized('Refresh token expired');
   if (record.token_hash !== hashToken(refreshToken)) throw AppError.unauthorized('Refresh token mismatch');
 
@@ -145,9 +173,15 @@ async function logout({ userId, tokenId }) {
   await models.RefreshToken.update({ revoked_at: new Date() }, { where });
 }
 
-async function register({ organizationId, email, password, fullName, roleKeys = [] }) {
+async function register({ organizationId, email, password, fullName, roleKeys = [], actorRoles = [] }) {
   const existing = await models.User.findOne({ where: { email: String(email).toLowerCase() } });
   if (existing) throw AppError.conflict('Email already registered');
+
+  // Only an admin may grant the admin role; this prevents a holder of
+  // user.manage from escalating a new account to admin.
+  if (roleKeys.includes(ROLES.ADMIN) && !actorRoles.includes(ROLES.ADMIN)) {
+    throw AppError.forbidden('Only an administrator can grant the admin role');
+  }
 
   const passwordHash = await hashPassword(password);
   const user = await models.User.create({
@@ -158,6 +192,7 @@ async function register({ organizationId, email, password, fullName, roleKeys = 
   });
 
   if (roleKeys.length) {
+    // Only assign roles that actually exist; silently drop unknown keys.
     const roles = await models.Role.findAll({ where: { key: { [Op.in]: roleKeys } } });
     await user.addRoles(roles);
   }

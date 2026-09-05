@@ -21,10 +21,8 @@ function errorHandler(err, req, res, next) {
   }
 
   if (err && err.name === 'SequelizeForeignKeyConstraintError') {
-    return failure(res, 409, 'CONFLICT', 'Foreign key constraint violation', {
-      table: err.table,
-      constraint: err.index,
-    });
+    // Do not leak internal table/constraint names to the client.
+    return failure(res, 409, 'CONFLICT', 'Related record constraint violation');
   }
 
   if (err && err.name === 'JsonWebTokenError') {
