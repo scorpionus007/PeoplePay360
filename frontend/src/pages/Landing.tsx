@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
+import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
 import { useAuth } from '../auth/AuthContext';
 import { Logo } from '../components/Logo';
 import { WhySection } from './landing/WhySection';
 import { ModulesSection } from './landing/ModulesSection';
 import { HoodSection } from './landing/HoodSection';
+import { CrowdCanvas } from '../components/v1/skiper39';
+import { LandingFooter } from './landing/LandingFooter';
 import './Landing.css';
 
 const NAV = [
@@ -14,10 +18,13 @@ const NAV = [
   { id: 'hood', label: 'under the hood' },
 ] as const;
 
+const NAV_OFFSET = -96;
+
 export function LandingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const heroRef = useRef<HTMLElement>(null);
+  const lenisRef = useRef<Lenis | null>(null);
   const [onHero, setOnHero] = useState(true);
 
   useEffect(() => {
@@ -25,7 +32,17 @@ export function LandingPage() {
     if (window.location.hash) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
-    window.scrollTo(0, 0);
+
+    const lenis = new Lenis({
+      autoRaf: true,
+      smoothWheel: true,
+      lerp: 0.085,
+      wheelMultiplier: 0.9,
+      touchMultiplier: 1.1,
+      anchors: false,
+    });
+    lenisRef.current = lenis;
+    lenis.scrollTo(0, { immediate: true });
 
     const io = new IntersectionObserver(
       ([entry]) => setOnHero(entry.isIntersecting),
@@ -34,12 +51,20 @@ export function LandingPage() {
     if (heroRef.current) io.observe(heroRef.current);
     return () => {
       io.disconnect();
+      lenis.destroy();
+      lenisRef.current = null;
       document.documentElement.classList.remove('pp-landing-scroll');
     };
   }, []);
 
   const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(el, { offset: NAV_OFFSET, lerp: 0.08 });
+      return;
+    }
+    el.scrollIntoView({ behavior: 'smooth' });
   };
 
   const onLogin = () => {
@@ -76,11 +101,15 @@ export function LandingPage() {
 
       <section ref={heroRef} className="pp-landing__hero" aria-label="peoplepay">
         <Logo as="h1" className="pp-landing__mark" />
+        <div className="pp-landing__hero-crowd" aria-hidden="true">
+          <CrowdCanvas src="/images/peeps/all-peeps.png" rows={15} cols={7} />
+        </div>
       </section>
 
       <WhySection />
       <ModulesSection />
       <HoodSection />
+      <LandingFooter />
     </div>
   );
 }

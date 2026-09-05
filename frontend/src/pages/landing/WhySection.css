@@ -29,12 +29,20 @@
   will-change: transform, opacity;
 }
 
-.pp-why__body {
-  margin: 20px 0 0;
-  font-size: 17px;
-  line-height: 1.6;
-  letter-spacing: -0.015em;
+.pp-why__copy {
+  margin: 28px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
   max-width: none;
+}
+
+.pp-why__lead,
+.pp-why__para {
+  margin: 0;
+  font-size: var(--pp-copy-size);
+  line-height: var(--pp-copy-leading);
+  letter-spacing: var(--pp-copy-tracking);
   color: #000;
 }
 
