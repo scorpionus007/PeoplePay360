@@ -1,11 +1,27 @@
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Banknote, Users, Sparkles, Laptop, Handshake, Plane, Calendar, TrendingUp } from 'lucide-react';
+import {
+  Zap,
+  Receipt,
+  UserPlus,
+  Plane,
+  Wallet,
+  Eye,
+  EyeOff,
+  ArrowLeftRight,
+  ListChecks,
+  FileText,
+  DollarSign,
+  Clock,
+  Flag,
+  Info,
+  ChevronRight,
+  ArrowUpRight,
+} from 'lucide-react';
 import { api } from '../api/client';
-import { PageHeader } from '../components/PageHeader';
-import { StatCard } from '../components/StatCard';
-import { Card, CardBody, CardHeader } from '../components/Card';
-import { Badge } from '../components/Badge';
-import { formatMoney, formatNumber } from '../utils/format';
+import { Badge, statusTone } from '../components/Badge';
+import { formatMoney, formatNumber, humanizeEnum, formatDate } from '../utils/format';
 import { useAuth } from '../auth/AuthContext';
 import './Dashboard.css';
 
@@ -19,115 +35,222 @@ function useDashboard<T = any>(path: string, enabled = true) {
 
 export function DashboardPage() {
   const { user, hasPermission } = useAuth();
+  const navigate = useNavigate();
   const currency = user?.organization?.base_currency || 'USD';
   const isAdmin = user?.roles?.includes('admin');
+  const [showBalance, setShowBalance] = useState(false);
 
   const payroll = useDashboard<any>('/payroll/dashboard/overview', isAdmin || hasPermission('payroll.read'));
   const hr = useDashboard<any>('/hr/dashboard/overview', isAdmin || hasPermission('hr.request.read'));
-  const it = useDashboard<any>('/it/dashboard/overview', isAdmin || hasPermission('it.device.read'));
-  const benefits = useDashboard<any>('/benefits/dashboard/overview', isAdmin || hasPermission('benefit.plan.read'));
   const hiring = useDashboard<any>('/hiring/dashboard/overview', isAdmin || hasPermission('requisition.read'));
-  const mobility = useDashboard<any>('/mobility/dashboard/overview', isAdmin || hasPermission('visa.read'));
 
+  const payrunsQ = useQuery({
+    queryKey: ['dash', 'recent-payruns'],
+    enabled: isAdmin || hasPermission('payrun.read'),
+    queryFn: async () => (await api.get('/payroll/payruns', { params: { limit: 5 } })).data.data as any[],
+  });
+
+  const firstName = user?.full_name?.split(' ')[0] || 'there';
   const totalNet = payroll.data?.kpis?.total_net_paid ?? 0;
-  const employees = payroll.data?.kpis?.employee_count ?? hr.data?.kpis?.total_employees ?? 0;
+  const currencySymbol = useMemo(() => {
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency, maximumFractionDigits: 0 })
+        .formatToParts(0)
+        .find((p) => p.type === 'currency')?.value || currency;
+    } catch {
+      return currency;
+    }
+  }, [currency]);
+
+  const quickActions = [
+    { label: 'Run payroll', icon: <Receipt size={20} />, to: '/payroll/payruns' },
+    { label: 'Add employee', icon: <UserPlus size={20} />, to: '/employees' },
+    { label: 'Request time off', icon: <Plane size={20} />, to: '/hr/time-off' },
+    { label: 'View payslips', icon: <Wallet size={20} />, to: '/payroll/payslips' },
+  ];
+
+  const tasks = useMemo(() => {
+    const items: { label: string; count: number; to: string }[] = [];
+    const pendingTimeOff = hr.data?.kpis?.pending_time_off_requests ?? 0;
+    const openRequests = hr.data?.kpis?.open_hr_requests ?? 0;
+    const upcomingInterviews = hiring.data?.kpis?.upcoming_interviews ?? 0;
+    const draftPayslips = payroll.data?.kpis?.payslips_generated - (payroll.data?.kpis?.payslips_paid ?? 0);
+    if (pendingTimeOff > 0) items.push({ label: 'Time off requests to review', count: pendingTimeOff, to: '/hr/time-off' });
+    if (openRequests > 0) items.push({ label: 'Open HR requests', count: openRequests, to: '/hr/requests' });
+    if (upcomingInterviews > 0) items.push({ label: 'Upcoming interviews', count: upcomingInterviews, to: '/hiring/interviews' });
+    if (draftPayslips > 0) items.push({ label: 'Payslips awaiting payment', count: draftPayslips, to: '/payroll/payslips' });
+    return items;
+  }, [hr.data, hiring.data, payroll.data]);
+
+  const contractTypes = [
+    { title: 'Permanent', icon: <DollarSign size={18} />, desc: 'For employees on an ongoing payroll cycle with a fixed salary.' },
+    { title: 'Fixed term', icon: <Clock size={18} />, desc: 'For contracts with a defined start and end date.' },
+    { title: 'Freelance', icon: <Flag size={18} />, desc: 'For contractors paid per invoice or milestone.' },
+  ];
 
   return (
-    <div className="pp-dashboard">
-      <PageHeader
-        title={`Good day, ${user?.full_name?.split(' ')[0] || 'there'}`}
-        subtitle={`Here is what is happening across ${user?.organization?.name || 'your workspace'} today.`}
-      />
+    <div className="pp-home">
+      <h1 className="pp-home__greeting">Hey, {firstName}</h1>
 
-      <section className="pp-dashboard__stats">
-        <StatCard label="Total net paid" value={formatMoney(totalNet, currency)} hint="Across all payruns" icon={<Banknote size={18} />} tone="primary" loading={payroll.isLoading} />
-        <StatCard label="Active employees" value={formatNumber(employees)} hint={`${payroll.data?.kpis?.active_contracts ?? 0} active contracts`} icon={<Users size={18} />} tone="info" loading={hr.isLoading && payroll.isLoading} />
-        <StatCard label="Open hiring" value={formatNumber(hiring.data?.kpis?.active_applications ?? 0)} hint={`${hiring.data?.kpis?.open_requisitions ?? 0} open reqs`} icon={<Handshake size={18} />} tone="success" loading={hiring.isLoading} />
-        <StatCard label="Managed devices" value={formatNumber(it.data?.kpis?.total_devices ?? 0)} hint={`${it.data?.kpis?.baseline_pass_rate ?? 0}% baseline pass`} icon={<Laptop size={18} />} tone="warning" loading={it.isLoading} />
-      </section>
-
-      <section className="pp-dashboard__grid">
-        <Card>
-          <CardHeader title="Payroll pulse" subtitle="Live payslip and payment status" actions={<Badge tone="primary" dot>Live</Badge>} />
-          <CardBody>
-            <div className="pp-dashboard__list">
-              <MetricRow label="Payslips generated" value={formatNumber(payroll.data?.kpis?.payslips_generated ?? 0)} loading={payroll.isLoading} />
-              <MetricRow label="Payslips paid" value={formatNumber(payroll.data?.kpis?.payslips_paid ?? 0)} loading={payroll.isLoading} />
-              <MetricRow label="Salary structures" value={formatNumber(payroll.data?.kpis?.salary_structures ?? 0)} loading={payroll.isLoading} />
-              <MetricRow label="Average net" value={formatMoney(payroll.data?.kpis?.average_net ?? 0, currency)} loading={payroll.isLoading} />
+      <div className="pp-home__layout">
+        <div className="pp-home__main">
+          {/* Quick actions */}
+          <section className="pp-panel">
+            <div className="pp-panel__head">
+              <span className="pp-panel__icon"><Zap size={16} /></span>
+              <h2 className="pp-panel__title">Quick actions</h2>
             </div>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader title="People operations" subtitle="Attendance, time off, HR requests" actions={<Calendar size={16} />} />
-          <CardBody>
-            <div className="pp-dashboard__list">
-              <MetricRow label="Pending time off" value={formatNumber(hr.data?.kpis?.pending_time_off_requests ?? 0)} loading={hr.isLoading} />
-              <MetricRow label="Open HR requests" value={formatNumber(hr.data?.kpis?.open_hr_requests ?? 0)} loading={hr.isLoading} />
-              <MetricRow label="New feedback" value={formatNumber(hr.data?.kpis?.new_feedback ?? 0)} loading={hr.isLoading} />
-              <MetricRow label="Corrected attendance" value={formatNumber(hr.data?.kpis?.manually_edited_attendance ?? 0)} loading={hr.isLoading} />
+            <div className="pp-quick">
+              {quickActions.map((a) => (
+                <button key={a.label} type="button" className="pp-quick__tile" onClick={() => navigate(a.to)}>
+                  <span className="pp-quick__icon">{a.icon}</span>
+                  <span className="pp-quick__label">{a.label}</span>
+                </button>
+              ))}
             </div>
-          </CardBody>
-        </Card>
+          </section>
 
-        <Card>
-          <CardHeader title="Benefits" subtitle="Enrollments, claims, loans, vouchers" actions={<Sparkles size={16} />} />
-          <CardBody>
-            <div className="pp-dashboard__list">
-              <MetricRow label="Active plans" value={formatNumber(benefits.data?.kpis?.active_plans ?? 0)} loading={benefits.isLoading} />
-              <MetricRow label="Active enrollments" value={formatNumber(benefits.data?.kpis?.active_enrollments ?? 0)} loading={benefits.isLoading} />
-              <MetricRow label="Pending claims" value={formatNumber(benefits.data?.kpis?.pending_claims ?? 0)} loading={benefits.isLoading} />
-              <MetricRow label="Outstanding loans" value={formatMoney(benefits.data?.kpis?.outstanding_loan_amount ?? 0, currency)} loading={benefits.isLoading} />
+          {/* Balance */}
+          <section className="pp-panel">
+            <div className="pp-panel__head">
+              <span className="pp-panel__icon"><Wallet size={16} /></span>
+              <h2 className="pp-panel__title">Payroll balance</h2>
+              <button type="button" className="pp-pill pp-pill--ghost" onClick={() => navigate('/payroll/payruns')}>View all</button>
             </div>
-          </CardBody>
-        </Card>
+            <div className="pp-balance">
+              <div className="pp-balance__row">
+                <div className="pp-balance__amount">
+                  {payroll.isLoading ? (
+                    <span className="pp-skeleton" style={{ width: 180, height: 34, display: 'inline-block' }} />
+                  ) : showBalance ? (
+                    formatMoney(totalNet, currency)
+                  ) : (
+                    <span className="pp-balance__mask">{currencySymbol}<span>*****</span></span>
+                  )}
+                  <button type="button" className="pp-balance__eye" onClick={() => setShowBalance((s) => !s)} aria-label="Toggle balance visibility">
+                    {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <button type="button" className="pp-btn-move" onClick={() => navigate('/payroll/payruns')}>
+                  <ArrowLeftRight size={15} /> Move money
+                </button>
+              </div>
+              <div className="pp-balance__chip">
+                <span className="pp-balance__ccy">{currency}</span>
+              </div>
 
-        <Card>
-          <CardHeader title="Hiring pipeline" subtitle="Requisitions, applications, offers" actions={<TrendingUp size={16} />} />
-          <CardBody>
-            <div className="pp-dashboard__list">
-              <MetricRow label="Published postings" value={formatNumber(hiring.data?.kpis?.published_postings ?? 0)} loading={hiring.isLoading} />
-              <MetricRow label="Upcoming interviews" value={formatNumber(hiring.data?.kpis?.upcoming_interviews ?? 0)} loading={hiring.isLoading} />
-              <MetricRow label="Offers extended" value={formatNumber(hiring.data?.kpis?.offers_extended ?? 0)} loading={hiring.isLoading} />
-              <MetricRow label="Active referrals" value={formatNumber(hiring.data?.kpis?.active_referrals ?? 0)} loading={hiring.isLoading} />
+              <div className="pp-promo">
+                <div className="pp-promo__body">
+                  <div className="pp-promo__title">Process your next payrun with PeoplePay Flow</div>
+                  <p className="pp-promo__text">
+                    Generate payslips, approve, and pay your team in a few clicks without spreadsheets or manual reconciliation.
+                    <button type="button" className="pp-promo__link" onClick={() => navigate('/payroll/payruns')}>Learn more</button>
+                  </p>
+                </div>
+                <button type="button" className="pp-promo__cta" onClick={() => navigate('/payroll/payruns')}>Start</button>
+              </div>
             </div>
-          </CardBody>
-        </Card>
+          </section>
 
-        <Card>
-          <CardHeader title="IT fleet" subtitle="Devices, baseline, EDR events" actions={<Laptop size={16} />} />
-          <CardBody>
-            <div className="pp-dashboard__list">
-              <MetricRow label="Software items" value={formatNumber(it.data?.kpis?.software_items ?? 0)} loading={it.isLoading} />
-              <MetricRow label="EDR integrations" value={formatNumber(it.data?.kpis?.active_edr_integrations ?? 0)} loading={it.isLoading} />
-              <MetricRow label="Open high severity" value={formatNumber(it.data?.kpis?.open_high_severity_events ?? 0)} loading={it.isLoading} />
-              <MetricRow label="Pending onboarding" value={formatNumber(it.data?.kpis?.pending_onboarding_provisions ?? 0)} loading={it.isLoading} />
+          {/* Recent payruns */}
+          <section className="pp-panel">
+            <div className="pp-panel__head">
+              <span className="pp-panel__icon"><Receipt size={16} /></span>
+              <h2 className="pp-panel__title">Recent payruns</h2>
+              <button type="button" className="pp-pill pp-pill--ghost" onClick={() => navigate('/payroll/payruns')}>View all</button>
             </div>
-          </CardBody>
-        </Card>
+            <div className="pp-recent">
+              {payrunsQ.isLoading && (
+                <>
+                  {[0, 1, 2].map((i) => <div key={i} className="pp-recent__row"><span className="pp-skeleton" style={{ width: '60%', height: 16 }} /><span className="pp-skeleton" style={{ width: 80, height: 16 }} /></div>)}
+                </>
+              )}
+              {!payrunsQ.isLoading && (payrunsQ.data || []).length === 0 && (
+                <div className="pp-recent__empty">No payruns yet. Start your first payrun to see it here.</div>
+              )}
+              {!payrunsQ.isLoading && (payrunsQ.data || []).slice(0, 5).map((r: any) => (
+                <button key={r.id} type="button" className="pp-recent__row pp-recent__row--link" onClick={() => navigate(`/payroll/payruns/${r.id}`)}>
+                  <span className="pp-recent__left">
+                    <span className="pp-recent__avatar"><Receipt size={15} /></span>
+                    <span>
+                      <span className="pp-recent__name">{r.name || `Payrun ${formatDate(r.period_start)}`}</span>
+                      <span className="pp-recent__sub">{r.period_start ? `${formatDate(r.period_start)} to ${formatDate(r.period_end)}` : 'Draft'}</span>
+                    </span>
+                  </span>
+                  <span className="pp-recent__right">
+                    <Badge tone={statusTone(r.status)} dot>{humanizeEnum(r.status)}</Badge>
+                    <ChevronRight size={16} className="pp-recent__chev" />
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
 
-        <Card>
-          <CardHeader title="Mobility" subtitle="Visas, relocations, travel" actions={<Plane size={16} />} />
-          <CardBody>
-            <div className="pp-dashboard__list">
-              <MetricRow label="Active visas" value={formatNumber(mobility.data?.kpis?.active_visa_cases ?? 0)} loading={mobility.isLoading} />
-              <MetricRow label="Expiring in 30 days" value={formatNumber(mobility.data?.kpis?.visas_expiring_in_30_days ?? 0)} loading={mobility.isLoading} />
-              <MetricRow label="Active relocations" value={formatNumber(mobility.data?.kpis?.active_relocations ?? 0)} loading={mobility.isLoading} />
-              <MetricRow label="Upcoming travel" value={formatNumber(mobility.data?.kpis?.upcoming_travel ?? 0)} loading={mobility.isLoading} />
+        <div className="pp-home__side">
+          {/* All tasks */}
+          <section className="pp-panel">
+            <div className="pp-panel__head">
+              <span className="pp-panel__icon"><ListChecks size={16} /></span>
+              <h2 className="pp-panel__title">All tasks</h2>
             </div>
-          </CardBody>
-        </Card>
-      </section>
+            {tasks.length === 0 ? (
+              <div className="pp-tasks-empty">
+                <TasksIllustration />
+                <div className="pp-tasks-empty__title">That is all for today</div>
+                <div className="pp-tasks-empty__text">You are all caught up across payroll and people ops.</div>
+              </div>
+            ) : (
+              <div className="pp-tasklist">
+                {tasks.map((t) => (
+                  <button key={t.label} type="button" className="pp-tasklist__row" onClick={() => navigate(t.to)}>
+                    <span className="pp-tasklist__badge">{formatNumber(t.count)}</span>
+                    <span className="pp-tasklist__label">{t.label}</span>
+                    <ArrowUpRight size={16} className="pp-tasklist__arrow" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Create contract */}
+          <section className="pp-panel">
+            <div className="pp-panel__head">
+              <span className="pp-panel__icon"><FileText size={16} /></span>
+              <h2 className="pp-panel__title">Create contract</h2>
+            </div>
+            <p className="pp-panel__lead">Choose your contracting agreement</p>
+            <div className="pp-contract">
+              {contractTypes.map((c) => (
+                <button key={c.title} type="button" className="pp-contract__row" onClick={() => navigate('/payroll/contracts')}>
+                  <span className="pp-contract__icon">{c.icon}</span>
+                  <span className="pp-contract__body">
+                    <span className="pp-contract__title">{c.title} <Info size={13} className="pp-contract__info" /></span>
+                    <span className="pp-contract__desc">{c.desc}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
 
-function MetricRow({ label, value, loading }: { label: string; value: string; loading?: boolean }) {
+function TasksIllustration() {
   return (
-    <div className="pp-dashboard__row">
-      <span className="pp-dashboard__row-label">{label}</span>
-      {loading ? <span className="pp-skeleton pp-dashboard__row-sk" /> : <span className="pp-dashboard__row-value">{value}</span>}
-    </div>
+    <svg className="pp-tasks-empty__art" width="180" height="130" viewBox="0 0 180 130" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <ellipse cx="90" cy="118" rx="66" ry="8" fill="var(--pp-primary-50)" />
+      <rect x="36" y="44" width="94" height="60" rx="8" fill="var(--pp-primary-100)" />
+      <rect x="36" y="44" width="94" height="60" rx="8" stroke="var(--pp-primary-500)" strokeWidth="2" />
+      <rect x="30" y="104" width="106" height="8" rx="4" fill="var(--pp-primary-500)" />
+      <rect x="48" y="56" width="70" height="36" rx="4" fill="var(--pp-surface)" />
+      <path d="M70 74l8 8 16-18" stroke="var(--pp-primary-600)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="132" cy="40" r="14" fill="var(--pp-amber-100)" />
+      <path d="M132 34v6l4 3" stroke="var(--pp-amber-500)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="44" cy="30" r="5" fill="var(--pp-mint-100)" />
+      <circle cx="150" cy="80" r="4" fill="var(--pp-sky-100)" />
+    </svg>
   );
 }
