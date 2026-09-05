@@ -39,6 +39,11 @@ async function getOne(req, res) {
 }
 
 async function create(req, res) {
+  // Ensure the referenced employee belongs to the caller's organization.
+  const employee = await models.Employee.findOne({
+    where: { id: req.body.employee_id, organization_id: req.user.organizationId },
+  });
+  if (!employee) throw AppError.unprocessable('Employee does not belong to your organization');
   const row = await models.ImmigrationCase.create({
     ...req.body,
     organization_id: req.user.organizationId,
@@ -54,6 +59,11 @@ async function update(req, res) {
     where: { id: req.params.id, organization_id: req.user.organizationId },
   });
   if (!row) throw AppError.notFound('Immigration case not found');
+  // Keep resolved_at consistent when status changes through the generic update.
+  if (req.body.status && req.body.status !== row.status) {
+    if (req.body.status === IMMIGRATION_CASE_STATUS.RESOLVED) req.body.resolved_at = new Date();
+    else req.body.resolved_at = null;
+  }
   await row.update(req.body);
   return success(res, row);
 }
