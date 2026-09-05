@@ -96,11 +96,8 @@ export function Sidebar() {
   return (
     <aside className="pp-sidebar">
       <div className="pp-sidebar__brand">
-        <Logo size={28} />
+        <Logo size={22} />
       </div>
-      {user?.organization?.name && (
-        <div className="pp-sidebar__org">{user.organization.name}</div>
-      )}
 
       <nav className="pp-sidebar__nav">
         {NAV.map((group) => {

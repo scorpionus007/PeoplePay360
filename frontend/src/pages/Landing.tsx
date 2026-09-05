@@ -1,4 +1,4 @@
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   Banknote,
@@ -20,23 +20,28 @@ import { Button } from '../components/Button';
 import './Landing.css';
 
 export function LandingPage() {
-  const { user, loading } = useAuth();
-  if (!loading && user) return <Navigate to="/dashboard" replace />;
+  const { user } = useAuth();
+  const workspaceTo = user ? '/dashboard' : '/login';
+  const workspaceLabel = user ? 'Go to workspace' : 'Enter workspace';
 
   return (
     <div className="pp-landing">
       <header className="pp-landing__nav">
         <div className="pp-landing__nav-inner">
-          <Logo size={28} />
+          <Link to="/" aria-label="peoplepay home"><Logo size={26} /></Link>
           <nav className="pp-landing__nav-links" aria-label="Primary">
             <a href="#modules">Modules</a>
-            <a href="#why">Why PeoplePay360</a>
+            <a href="#why">Why peoplepay</a>
             <a href="#roles">For every role</a>
             <a href="#stack">Under the hood</a>
           </nav>
           <div className="pp-landing__nav-cta">
-            <Link to="/login" className="pp-landing__nav-link">Sign in</Link>
-            <Link to="/login"><Button size="sm" rightIcon={<ArrowRight size={14} />}>Enter workspace</Button></Link>
+            {user ? (
+              <span className="pp-landing__nav-signed">Signed in as {user.full_name.split(' ')[0]}</span>
+            ) : (
+              <Link to="/login" className="pp-landing__nav-link">Sign in</Link>
+            )}
+            <Link to={workspaceTo}><Button size="sm" rightIcon={<ArrowRight size={14} />}>{workspaceLabel}</Button></Link>
           </div>
         </div>
       </header>
@@ -55,7 +60,7 @@ export function LandingPage() {
             and keep every module in sync. Six modules, one workspace, real time.
           </p>
           <div className="pp-landing__hero-cta">
-            <Link to="/login"><Button size="lg" rightIcon={<ArrowRight size={16} />}>Enter workspace</Button></Link>
+            <Link to={workspaceTo}><Button size="lg" rightIcon={<ArrowRight size={16} />}>{workspaceLabel}</Button></Link>
             <a href="/api/docs" target="_blank" rel="noreferrer"><Button size="lg" variant="secondary" leftIcon={<BookOpen size={16} />}>API docs</Button></a>
           </div>
           <div className="pp-landing__hero-badges">
@@ -66,7 +71,7 @@ export function LandingPage() {
           </div>
         </div>
         <div className="pp-landing__hero-mark" aria-hidden="true">
-          <Logo variant="mark" size={340} />
+          <Logo size={200} />
         </div>
       </section>
 
@@ -140,11 +145,15 @@ export function LandingPage() {
 
       <section className="pp-landing__cta">
         <div className="pp-landing__cta-inner">
-          <Logo variant="mark" size={80} />
+          <Logo size={56} />
           <h2 className="pp-landing__cta-title">Ready to run your organization?</h2>
-          <p className="pp-landing__cta-body">Sign in with the demo workspace to explore payroll, HR, IT, benefits, hiring and mobility end to end.</p>
+          <p className="pp-landing__cta-body">
+            {user
+              ? `Welcome back, ${user.full_name.split(' ')[0]}. Jump straight into your workspace.`
+              : 'Sign in with the demo workspace to explore payroll, HR, IT, benefits, hiring and mobility end to end.'}
+          </p>
           <div className="pp-landing__cta-buttons">
-            <Link to="/login"><Button size="lg" rightIcon={<ArrowRight size={16} />}>Enter workspace</Button></Link>
+            <Link to={workspaceTo}><Button size="lg" rightIcon={<ArrowRight size={16} />}>{workspaceLabel}</Button></Link>
             <a href="https://github.com/scorpionus007/PeoplePay360" target="_blank" rel="noreferrer">
               <Button size="lg" variant="secondary" leftIcon={<MessageSquare size={16} />}>View on GitHub</Button>
             </a>
@@ -154,7 +163,7 @@ export function LandingPage() {
 
       <footer className="pp-landing__footer">
         <div className="pp-landing__footer-inner">
-          <Logo size={22} />
+          <Logo size={20} />
           <div className="pp-landing__footer-links">
             <a href="#modules">Modules</a>
             <a href="/api/docs" target="_blank" rel="noreferrer">API</a>

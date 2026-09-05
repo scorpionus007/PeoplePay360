@@ -36,7 +36,7 @@ export function LoginPage() {
     <div className="pp-login">
       <div className="pp-login__left">
         <div className="pp-login__brand">
-          <Logo size={30} />
+          <Logo size={24} />
         </div>
         <div className="pp-login__card">
           <h1 className="pp-login__title">Welcome back</h1>

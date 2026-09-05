@@ -38,8 +38,18 @@
   transition: color var(--pp-transition-fast);
 }
 .pp-landing__nav-link:hover { color: var(--pp-primary-600); }
+.pp-landing__nav-signed {
+  color: var(--pp-text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 6px 12px;
+  background: var(--pp-ink-50);
+  border: 1px solid var(--pp-border);
+  border-radius: var(--pp-radius-pill);
+}
 @media (max-width: 780px) {
   .pp-landing__nav-links { display: none; }
+  .pp-landing__nav-signed { display: none; }
 }
 
 /* Hero */
@@ -110,11 +120,11 @@
 .pp-landing__hero-badges span { display: inline-flex; align-items: center; gap: 6px; }
 .pp-landing__hero-mark {
   position: absolute;
-  right: -80px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: -40px;
+  bottom: 40px;
   color: rgba(109, 92, 255, 0.09);
   pointer-events: none;
+  transform: rotate(-4deg);
 }
 @media (max-width: 900px) {
   .pp-landing__hero { padding: 80px 20px 100px; }
