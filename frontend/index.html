@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b0d17" />
+    <meta name="theme-color" content="#000000" />
     <title>PeoplePay360</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,6 +12,21 @@
       rel="stylesheet"
     />
     <link rel="icon" type="image/svg+xml" href="/logo-mark.svg" />
+    <script>
+      (function () {
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        function startAtTop() {
+          var path = location.pathname;
+          if (path !== '/' && path !== '/index.html') return;
+          if (location.hash) history.replaceState(null, '', path + location.search);
+          window.scrollTo(0, 0);
+        }
+        startAtTop();
+        window.addEventListener('DOMContentLoaded', startAtTop);
+        window.addEventListener('load', startAtTop);
+        window.addEventListener('pageshow', startAtTop);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -3,33 +3,70 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   background: var(--pp-bg);
+  font-family: var(--pp-font-sans);
 }
 @media (max-width: 960px) {
   .pp-login { grid-template-columns: 1fr; }
   .pp-login__right { display: none; }
+  .pp-login__left { box-shadow: none; }
 }
 
 .pp-login__left {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   padding: 40px 48px;
-  gap: 32px;
+  background: var(--pp-bg);
+  box-shadow: 16px 0 40px rgba(16, 19, 34, 0.14);
 }
 
-.pp-login__brand { color: var(--pp-text); }
+.pp-login__brand {
+  color: var(--pp-text);
+  text-decoration: none;
+  width: fit-content;
+  cursor: pointer;
+}
 
 .pp-login__card {
-  flex: 1;
-  align-self: center;
-  width: min(100%, 420px);
+  width: min(100%, 500px);
+  margin: auto;
   background: var(--pp-surface);
   border: 1px solid var(--pp-border);
   border-radius: var(--pp-radius-xl);
   padding: 40px;
   box-shadow: var(--pp-shadow-lg);
 }
-.pp-login__title { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
-.pp-login__subtitle { color: var(--pp-text-muted); font-size: 13.5px; margin-top: 6px; margin-bottom: 24px; }
+.pp-login__title {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-family: inherit;
+}
+.pp-login__subtitle {
+  color: var(--pp-text-muted);
+  font-size: 19px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  margin-top: 10px;
+  margin-bottom: 30px;
+}
+
+.pp-login .pp-field__label {
+  font-size: 17px;
+}
+.pp-login .pp-input {
+  font-size: 18px;
+  min-height: 52px;
+  padding: 14px 16px;
+}
+.pp-login .pp-field__control--adorned .pp-input {
+  padding-left: 42px;
+}
+.pp-login .pp-btn--lg {
+  font-size: 18px;
+  height: 56px;
+}
 
 .pp-login__form {
   display: flex;
@@ -41,56 +78,71 @@
   background: var(--pp-rose-100);
   padding: 10px 12px;
   border-radius: var(--pp-radius-md);
-  font-size: 12.5px;
+  font-size: 17px;
   border: 1px solid rgba(240, 68, 56, 0.16);
 }
-
-.pp-login__hint {
-  margin-top: 18px;
-  padding: 10px 12px;
-  background: var(--pp-ink-50);
-  border: 1px dashed var(--pp-border-strong);
-  border-radius: var(--pp-radius-md);
-  font-size: 12px;
-  color: var(--pp-text-muted);
-}
-
-.pp-login__legal { color: var(--pp-text-soft); font-size: 12px; }
 
 .pp-login__right {
   position: relative;
   overflow: hidden;
-  background: radial-gradient(1200px 500px at 20% 10%, rgba(109, 92, 255, 0.35), transparent 60%), linear-gradient(160deg, #0b0d17 0%, #191d33 55%, #221a56 100%);
-  color: var(--pp-white);
+  background: #e9e3f7;
+  color: #000;
   display: flex;
   align-items: center;
   padding: 60px 64px;
 }
-.pp-login__glow {
-  position: absolute;
-  inset: -20% -30% -30% -20%;
-  background: radial-gradient(500px 500px at 80% 90%, rgba(22, 179, 100, 0.25), transparent 60%);
-  pointer-events: none;
-}
 
-.pp-login__pitch { position: relative; max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
-.pp-login__pitch-eyebrow { color: rgba(255, 255, 255, 0.7); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
-.pp-login__pitch-title { font-size: 34px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; }
-.pp-login__pitch-body { color: rgba(255, 255, 255, 0.75); font-size: 15px; line-height: 1.55; }
-.pp-login__pitch-list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 8px; }
-.pp-login__pitch-list li {
-  padding-left: 20px;
+.pp-login__pitch {
   position: relative;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 13.5px;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: inherit;
+}
+.pp-login__pitch-eyebrow {
+  color: #000;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+.pp-login__pitch-title {
+  font-size: clamp(2.5rem, 4.2vw, 3.4rem);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #000;
+}
+.pp-login__pitch-body {
+  color: #000;
+  font-size: 20px;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+.pp-login__pitch-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pp-login__pitch-list li {
+  padding-left: 24px;
+  position: relative;
+  color: #000;
+  font-size: 19px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
 }
 .pp-login__pitch-list li::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 8px;
+  top: 0.52em;
   width: 8px;
   height: 8px;
-  border-radius: 2px;
-  background: linear-gradient(135deg, var(--pp-primary-500), var(--pp-mint-500));
+  border-radius: 50%;
+  background: #000;
 }

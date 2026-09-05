@@ -16,11 +16,11 @@
   --pp-white:   #ffffff;
 
   /* Accent palette */
-  --pp-primary-50:  #ede8ff;
-  --pp-primary-100: #ddd4ff;
-  --pp-primary-500: #6d5cff;
-  --pp-primary-600: #5b47ff;
-  --pp-primary-700: #4a37e6;
+  --pp-primary-50:  #f6f3fb;
+  --pp-primary-100: #e9e3f7;
+  --pp-primary-500: #e9e3f7;
+  --pp-primary-600: #6a6280;
+  --pp-primary-700: #4d4760;
 
   --pp-mint-500:    #16b364;
   --pp-mint-100:    #d1fadf;
@@ -44,7 +44,7 @@
   --pp-sidebar-text: #cfd3e6;
   --pp-sidebar-text-strong: var(--pp-white);
   --pp-sidebar-hover: #191d33;
-  --pp-sidebar-active: #221a56;
+  --pp-sidebar-active: #2f2a3d;
   --pp-sidebar-active-text: var(--pp-white);
   --pp-accent:      var(--pp-primary-600);
   --pp-accent-soft: var(--pp-primary-50);

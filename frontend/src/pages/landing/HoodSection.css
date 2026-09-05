@@ -1,0 +1,50 @@
+.pp-hood {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  background: #fff;
+  color: #000;
+}
+
+.pp-hood__inner {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 72px 36px 8px;
+}
+
+.pp-hood__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.28em;
+  font-size: clamp(2.2rem, 6.5vw, 4.4rem);
+  color: #000;
+  margin: 0;
+}
+
+.pp-hood__heading .pp-logo__strong,
+.pp-hood__heading .pp-logo__weak {
+  color: #000;
+}
+
+.pp-hood__word {
+  display: inline-flex;
+  align-items: baseline;
+  will-change: transform;
+}
+
+.pp-hood__body {
+  margin: 20px 0 0;
+  font-size: var(--pp-copy-size);
+  line-height: var(--pp-copy-leading);
+  letter-spacing: var(--pp-copy-tracking);
+  max-width: none;
+  color: #000;
+}
+
+@media (max-width: 820px) {
+  .pp-hood__inner {
+    padding: 56px 16px 8px;
+  }
+}

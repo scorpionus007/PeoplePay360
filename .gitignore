@@ -67,3 +67,5 @@ coverage/
 .metro-health-check*
 *.keystore
 !**/debug.keystore
+# Temporary local technical audit (never commit / push)
+TEMP_TECHNICAL_DETAILS.md
