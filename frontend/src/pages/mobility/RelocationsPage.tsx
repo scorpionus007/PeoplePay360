@@ -14,7 +14,8 @@ import { useAuth } from '../../auth/AuthContext';
 import { formatDate, formatMoney, humanizeEnum } from '../../utils/format';
 
 const STATUSES = ['requested', 'approved', 'in_progress', 'completed', 'cancelled'];
-const CATEGORIES = ['moving', 'housing', 'flights', 'temporary_stay', 'schooling', 'visa_fees', 'meals_per_diem', 'other'];
+const REASONS = ['new_role', 'transfer', 'promotion', 'return_home', 'other'];
+const CATEGORIES = ['flights', 'shipping', 'housing', 'temporary_stay', 'visa_fees', 'legal', 'transport', 'per_diem', 'other'];
 
 export function RelocationsPage() {
   const toast = useToast();
@@ -22,8 +23,9 @@ export function RelocationsPage() {
   const currency = user?.organization?.base_currency || 'USD';
   const [openForm, setOpenForm] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState<any>(null);
-  const [form, setForm] = useState<any>(defaults());
-  const [expForm, setExpForm] = useState<any>({ category: 'moving', description: '', amount: '', currency: currency, incurred_at: '' });
+  const [expenseDetail, setExpenseDetail] = useState<any>(null);
+  const [form, setForm] = useState<any>(defaults(currency));
+  const [expForm, setExpForm] = useState<any>({ category: 'flights', description: '', amount: '', currency, incurred_on: '' });
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['mobility.relocations'],
@@ -34,31 +36,38 @@ export function RelocationsPage() {
     queryFn: async () => (await api.get('/employees', { params: { limit: 200 } })).data.data as any[],
   });
   const partnersQ = useQuery({
-    queryKey: ['mobility.partners', 'relocation'],
-    queryFn: async () => (await api.get('/mobility/partners', { params: { category: 'relocation_agency' } })).data.data as any[],
+    queryKey: ['mobility.partners'],
+    queryFn: async () => (await api.get('/mobility/partners')).data.data as any[],
   });
 
   const save = async () => {
     try {
       await api.post('/mobility/relocations', {
-        ...form,
-        partner_id: form.partner_id || null,
-        estimated_budget: form.estimated_budget ? Number(form.estimated_budget) : null,
-        start_date: form.start_date || null,
-        completion_date: form.completion_date || null,
+        employee_id: form.employee_id,
+        mobility_partner_id: form.mobility_partner_id || null,
+        from_country_code: form.from_country_code,
+        from_city: form.from_city || null,
+        to_country_code: form.to_country_code,
+        to_city: form.to_city || null,
+        reason: form.reason,
+        budget_amount: form.budget_amount ? Number(form.budget_amount) : null,
+        budget_currency: form.budget_currency,
+        target_move_date: form.target_move_date || null,
+        dependents_count: Number(form.dependents_count) || 0,
+        notes: form.notes || null,
       });
       toast.success('Relocation created');
       setOpenForm(false);
-      setForm(defaults());
+      setForm(defaults(currency));
       refetch();
     } catch (err) {
       toast.error('Save failed', extractApiError(err));
     }
   };
 
-  const advance = async (id: string, status: string) => {
+  const transition = async (id: string, status: string) => {
     try {
-      await api.patch(`/mobility/relocations/${id}/status`, { status });
+      await api.post(`/mobility/relocations/${id}/transition`, { status });
       toast.success('Status updated');
       refetch();
     } catch (err) {
@@ -66,16 +75,29 @@ export function RelocationsPage() {
     }
   };
 
+  const openExpenses = async (row: any) => {
+    setExpenseOpen(row);
+    setExpenseDetail(null);
+    try {
+      const full = (await api.get(`/mobility/relocations/${row.id}`)).data.data;
+      setExpenseDetail(full);
+    } catch (err) {
+      toast.error('Could not load expenses', extractApiError(err));
+    }
+  };
+
   const addExpense = async () => {
     try {
       await api.post(`/mobility/relocations/${expenseOpen.id}/expenses`, {
-        ...expForm,
+        category: expForm.category,
+        description: expForm.description,
         amount: Number(expForm.amount),
-        incurred_at: expForm.incurred_at || null,
+        currency: expForm.currency,
+        incurred_on: expForm.incurred_on,
       });
       toast.success('Expense added');
-      setExpenseOpen(null);
-      setExpForm({ category: 'moving', description: '', amount: '', currency: currency, incurred_at: '' });
+      setExpForm({ category: 'flights', description: '', amount: '', currency, incurred_on: '' });
+      openExpenses(expenseOpen);
       refetch();
     } catch (err) {
       toast.error('Save failed', extractApiError(err));
@@ -94,21 +116,19 @@ export function RelocationsPage() {
         rows={data || []}
         empty={<EmptyState icon={<Home size={22} />} title="No relocations" action={<Button onClick={() => setOpenForm(true)}>New relocation</Button>} />}
         columns={[
-          { key: 'emp', header: 'Employee', render: (r: any) => r.employee ? <span style={{ fontWeight: 600 }}>{r.employee.first_name} {r.employee.last_name}</span> : '-' },
-          { key: 'from', header: 'From', render: (r: any) => r.origin_country || <span className="pp-soft">-</span>, width: '90px' },
-          { key: 'to', header: 'To', render: (r: any) => r.destination_country, width: '90px' },
-          { key: 'start', header: 'Start', render: (r: any) => r.start_date ? formatDate(r.start_date) : <span className="pp-soft">-</span>, width: '110px' },
-          { key: 'end', header: 'Completed', render: (r: any) => r.completion_date ? formatDate(r.completion_date) : <span className="pp-soft">-</span>, width: '110px' },
-          { key: 'partner', header: 'Partner', render: (r: any) => r.partner?.name || <span className="pp-soft">-</span> },
-          { key: 'budget', header: 'Budget', align: 'right' as const, render: (r: any) => r.estimated_budget ? formatMoney(r.estimated_budget, r.currency || currency) : <span className="pp-soft">-</span> },
-          { key: 'spent', header: 'Spent', align: 'right' as const, render: (r: any) => formatMoney(r.spent_to_date || 0, r.currency || currency) },
+          { key: 'emp', header: 'Employee', render: (r: any) => r.employee ? <div><div style={{ fontWeight: 600 }}>{r.employee.first_name} {r.employee.last_name}</div><div className="pp-soft" style={{ fontSize: 12 }}>{r.case_code}</div></div> : '-' },
+          { key: 'from', header: 'From', render: (r: any) => `${r.from_country_code}${r.from_city ? ` / ${r.from_city}` : ''}`, width: '130px' },
+          { key: 'to', header: 'To', render: (r: any) => `${r.to_country_code}${r.to_city ? ` / ${r.to_city}` : ''}`, width: '130px' },
+          { key: 'move', header: 'Target move', render: (r: any) => r.target_move_date ? formatDate(r.target_move_date) : <span className="pp-soft">-</span>, width: '120px' },
+          { key: 'budget', header: 'Budget', align: 'right' as const, render: (r: any) => r.budget_amount ? formatMoney(r.budget_amount, r.budget_currency || currency) : <span className="pp-soft">-</span> },
+          { key: 'spent', header: 'Spent', align: 'right' as const, render: (r: any) => formatMoney(r.spent_amount || 0, r.budget_currency || currency) },
           { key: 'status', header: 'Status', render: (r: any) => (
-            <Select value={r.status} onChange={(e) => advance(r.id, e.target.value)}>
+            <Select value={r.status} onChange={(e) => transition(r.id, e.target.value)}>
               {STATUSES.map((s) => <option key={s} value={s}>{humanizeEnum(s)}</option>)}
             </Select>
           ), width: '150px' },
           { key: 'actions', header: '', width: '140px', render: (r: any) => (
-            <Button size="sm" variant="subtle" leftIcon={<DollarSign size={14} />} onClick={() => setExpenseOpen(r)}>Expenses</Button>
+            <Button size="sm" variant="subtle" leftIcon={<DollarSign size={14} />} onClick={() => openExpenses(r)}>Expenses</Button>
           ) },
         ]}
       />
@@ -119,20 +139,23 @@ export function RelocationsPage() {
             <option value="">Select an employee</option>
             {(empsQ.data || []).map((e: any) => <option key={e.id} value={e.id}>{e.first_name} {e.last_name}</option>)}
           </Select>
-          <Select label="Relocation partner" value={form.partner_id} onChange={(e) => setForm({ ...form, partner_id: e.target.value })}>
+          <Select label="Relocation partner" value={form.mobility_partner_id} onChange={(e) => setForm({ ...form, mobility_partner_id: e.target.value })}>
             <option value="">None</option>
             {(partnersQ.data || []).map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </Select>
-          <Input label="Origin country (ISO2)" maxLength={2} value={form.origin_country} onChange={(e) => setForm({ ...form, origin_country: e.target.value.toUpperCase() })} />
-          <Input label="Origin city" value={form.origin_city} onChange={(e) => setForm({ ...form, origin_city: e.target.value })} />
-          <Input label="Destination country (ISO2)" required maxLength={2} value={form.destination_country} onChange={(e) => setForm({ ...form, destination_country: e.target.value.toUpperCase() })} />
-          <Input label="Destination city" value={form.destination_city} onChange={(e) => setForm({ ...form, destination_city: e.target.value })} />
-          <Input label="Start date" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
-          <Input label="Completion date" type="date" value={form.completion_date} onChange={(e) => setForm({ ...form, completion_date: e.target.value })} />
-          <Input label="Estimated budget" type="number" step="0.01" value={form.estimated_budget} onChange={(e) => setForm({ ...form, estimated_budget: e.target.value })} />
-          <Input label="Currency" maxLength={3} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value.toUpperCase() })} />
+          <Input label="From country (ISO2)" required maxLength={2} value={form.from_country_code} onChange={(e) => setForm({ ...form, from_country_code: e.target.value.toUpperCase() })} />
+          <Input label="From city" value={form.from_city} onChange={(e) => setForm({ ...form, from_city: e.target.value })} />
+          <Input label="To country (ISO2)" required maxLength={2} value={form.to_country_code} onChange={(e) => setForm({ ...form, to_country_code: e.target.value.toUpperCase() })} />
+          <Input label="To city" value={form.to_city} onChange={(e) => setForm({ ...form, to_city: e.target.value })} />
+          <Select label="Reason" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })}>
+            {REASONS.map((r) => <option key={r} value={r}>{humanizeEnum(r)}</option>)}
+          </Select>
+          <Input label="Target move date" type="date" value={form.target_move_date} onChange={(e) => setForm({ ...form, target_move_date: e.target.value })} />
+          <Input label="Budget amount" type="number" step="0.01" value={form.budget_amount} onChange={(e) => setForm({ ...form, budget_amount: e.target.value })} />
+          <Input label="Budget currency" maxLength={3} value={form.budget_currency} onChange={(e) => setForm({ ...form, budget_currency: e.target.value.toUpperCase() })} />
+          <Input label="Dependents" type="number" value={form.dependents_count} onChange={(e) => setForm({ ...form, dependents_count: e.target.value })} />
           <div style={{ gridColumn: '1 / -1' }}>
-            <Textarea label="Package summary" value={form.package_summary} onChange={(e) => setForm({ ...form, package_summary: e.target.value })} />
+            <Textarea label="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
         </div>
       </Modal>
@@ -142,10 +165,12 @@ export function RelocationsPage() {
           <div className="pp-stack">
             <div style={{ padding: 12, background: 'var(--pp-surface-2)', border: '1px solid var(--pp-border)', borderRadius: 'var(--pp-radius-md)' }}>
               <div style={{ fontWeight: 600, marginBottom: 8 }}>Recorded expenses</div>
-              {(expenseOpen.expenses || []).length === 0 && <div className="pp-soft">No expenses yet</div>}
-              {(expenseOpen.expenses || []).map((x: any) => (
+              {!expenseDetail && <div className="pp-soft">Loading...</div>}
+              {expenseDetail && (expenseDetail.expenses || []).length === 0 && <div className="pp-soft">No expenses yet</div>}
+              {expenseDetail && (expenseDetail.expenses || []).map((x: any) => (
                 <div key={x.id} className="pp-row" style={{ justifyContent: 'space-between', padding: '6px 0', borderTop: '1px dashed var(--pp-border)' }}>
                   <div>
+                    <Badge tone={statusTone(x.status)}>{humanizeEnum(x.status)}</Badge>
                     <Badge tone="neutral">{humanizeEnum(x.category)}</Badge>
                     <span style={{ marginLeft: 8 }}>{x.description}</span>
                   </div>
@@ -160,7 +185,7 @@ export function RelocationsPage() {
               <Input label="Description" required value={expForm.description} onChange={(e) => setExpForm({ ...expForm, description: e.target.value })} />
               <Input label="Amount" required type="number" step="0.01" value={expForm.amount} onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })} />
               <Input label="Currency" maxLength={3} value={expForm.currency} onChange={(e) => setExpForm({ ...expForm, currency: e.target.value.toUpperCase() })} />
-              <Input label="Incurred at" type="date" value={expForm.incurred_at} onChange={(e) => setExpForm({ ...expForm, incurred_at: e.target.value })} />
+              <Input label="Incurred on" type="date" required value={expForm.incurred_on} onChange={(e) => setExpForm({ ...expForm, incurred_on: e.target.value })} />
             </div>
           </div>
         </Modal>
@@ -169,12 +194,12 @@ export function RelocationsPage() {
   );
 }
 
-function defaults() {
+function defaults(currency: string) {
   return {
-    employee_id: '', partner_id: '',
-    origin_country: '', origin_city: '',
-    destination_country: '', destination_city: '',
-    start_date: '', completion_date: '',
-    estimated_budget: '', currency: 'USD', package_summary: '',
+    employee_id: '', mobility_partner_id: '',
+    from_country_code: '', from_city: '',
+    to_country_code: '', to_city: '',
+    reason: 'new_role', target_move_date: '',
+    budget_amount: '', budget_currency: currency, dependents_count: 0, notes: '',
   };
 }
