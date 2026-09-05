@@ -56,10 +56,24 @@ function WhyBody({ progress }: { progress: MotionValue<number> }) {
   const y = useTransform(progress, [0.5, 1], [18, 0]);
 
   return (
-    <motion.p className="pp-why__body" style={{ opacity, y }}>
-      One platform for every person operation. Payroll, hiring, devices, benefits
-      and mobility stay in the same workspace so nothing important lives between
-      spreadsheets.
-    </motion.p>
+    <motion.div className="pp-why__copy" style={{ opacity, y }}>
+      <p className="pp-why__lead">
+        One platform for every person operation. Payroll, hiring, devices, benefits
+        and mobility stay in the same workspace so nothing important lives between
+        spreadsheets.
+      </p>
+      <p className="pp-why__para">
+        PeoplePay is built for the work that happens after someone joins — and the
+        work that has to be true before they are paid. A requisition becomes an
+        offer, an offer becomes a contract, a contract becomes a payrun, and the
+        same person record carries devices, leave, claims, loans and visas with it.
+        Compensation follows sequenced rules you can read. Money does not move on a
+        draft. Time-off balances credit and debit like a ledger, not a sticky note.
+        Local amounts still roll up to one organization currency. HR, IT, benefits
+        and mobility stop being adjacent tools and start being the same operation,
+        with an audit trail that can explain who changed what. That is why the
+        surface can stay simple: the record underneath is already complete.
+      </p>
+    </motion.div>
   );
 }

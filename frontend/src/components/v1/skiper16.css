@@ -49,8 +49,9 @@
 }
 
 .skiper16-card__body {
-  font-size: 16px;
-  line-height: 1.55;
+  font-size: var(--pp-copy-size);
+  line-height: var(--pp-copy-leading);
+  letter-spacing: var(--pp-copy-tracking);
   max-width: none;
   color: #000;
   opacity: 0.72;
