@@ -18,6 +18,7 @@ import {
   BadgeDollarSign,
   Award,
   Settings,
+  Home,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuth } from '../auth/AuthContext';
@@ -67,14 +68,27 @@ const NAV: Group[] = [
   {
     label: 'HR',
     items: [
+      { to: '/hr/dashboard', label: 'HR Overview', icon: Sparkles, anyPerm: ['hr.request.read', 'attendance.read'] },
       { to: '/hr/attendance', label: 'Attendance', icon: Calendar, anyPerm: ['attendance.read', 'attendance.self.write'] },
+      { to: '/hr/schedules', label: 'Working Schedules', icon: ClipboardList, anyPerm: ['working_schedule.read'] },
       { to: '/hr/time-off', label: 'Time Off', icon: Plane, anyPerm: ['timeoff.request.read', 'timeoff.request.write'] },
       { to: '/hr/requests', label: 'Requests', icon: MessageSquare, anyPerm: ['hr.request.read'] },
+      { to: '/hr/feedback', label: 'Feedback', icon: Sparkles, anyPerm: ['feedback.read', 'feedback.write'] },
+      { to: '/hr/announcements', label: 'Announcements', icon: MessageSquare },
     ],
   },
   {
     label: 'Hiring',
-    items: [{ to: '/hiring/requisitions', label: 'Hiring', icon: Handshake, anyPerm: ['requisition.read', 'referral.submit'] }],
+    items: [
+      { to: '/hiring/dashboard', label: 'Hiring Overview', icon: Handshake, anyPerm: ['requisition.read', 'application.read'] },
+      { to: '/hiring/requisitions', label: 'Requisitions', icon: ClipboardList, anyPerm: ['requisition.read'] },
+      { to: '/hiring/postings', label: 'Job Postings', icon: Handshake, anyPerm: ['job.posting.read'] },
+      { to: '/hiring/candidates', label: 'Candidates', icon: Users, anyPerm: ['candidate.read'] },
+      { to: '/hiring/applications', label: 'Applications', icon: UserPlus, anyPerm: ['application.read'] },
+      { to: '/hiring/interviews', label: 'Interviews', icon: Calendar, anyPerm: ['interview.read'] },
+      { to: '/hiring/offers', label: 'Offers', icon: Handshake, anyPerm: ['offer.read'] },
+      { to: '/hiring/referrals', label: 'Referrals', icon: Award, anyPerm: ['referral.submit', 'referral.read'] },
+    ],
   },
   {
     label: 'IT',

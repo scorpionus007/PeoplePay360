@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { Calendar, Handshake, Laptop, Plane, MessageSquare } from 'lucide-react';
+import { Laptop, Plane } from 'lucide-react';
 import { useAuth } from './auth/AuthContext';
 import { AppShell } from './layout/AppShell';
 import { LoginPage } from './pages/Login';
@@ -28,6 +28,21 @@ import { BenefitEnrollmentsPage } from './pages/benefits/BenefitEnrollmentsPage'
 import { BenefitClaimsPage } from './pages/benefits/BenefitClaimsPage';
 import { LoansPage } from './pages/benefits/LoansPage';
 import { VouchersPage } from './pages/benefits/VouchersPage';
+import { HRDashboardPage } from './pages/hr/HRDashboardPage';
+import { AttendancePage } from './pages/hr/AttendancePage';
+import { WorkingSchedulesPage } from './pages/hr/WorkingSchedulesPage';
+import { TimeOffPage } from './pages/hr/TimeOffPage';
+import { HRRequestsPage } from './pages/hr/HRRequestsPage';
+import { FeedbackPage } from './pages/hr/FeedbackPage';
+import { AnnouncementsPage } from './pages/hr/AnnouncementsPage';
+import { HiringDashboardPage } from './pages/hiring/HiringDashboardPage';
+import { RequisitionsPage } from './pages/hiring/RequisitionsPage';
+import { JobPostingsPage } from './pages/hiring/JobPostingsPage';
+import { CandidatesPage } from './pages/hiring/CandidatesPage';
+import { ApplicationsPage } from './pages/hiring/ApplicationsPage';
+import { InterviewsPage } from './pages/hiring/InterviewsPage';
+import { OffersPage } from './pages/hiring/OffersPage';
+import { ReferralsPage } from './pages/hiring/ReferralsPage';
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
@@ -80,8 +95,23 @@ export default function App() {
         <Route path="/benefits/loans" element={<LoansPage />} />
         <Route path="/benefits/vouchers" element={<VouchersPage />} />
 
-        <Route path="/hr/*" element={<PlaceholderPage title="HR" subtitle="Attendance, time off, and people ops" module="HR" icon={<Calendar size={26} />} />} />
-        <Route path="/hiring/*" element={<PlaceholderPage title="Hiring" subtitle="Requisitions, pipeline, offers, referrals" module="Hiring" icon={<Handshake size={26} />} />} />
+        <Route path="/hr/dashboard" element={<HRDashboardPage />} />
+        <Route path="/hr/attendance" element={<AttendancePage />} />
+        <Route path="/hr/schedules" element={<WorkingSchedulesPage />} />
+        <Route path="/hr/time-off" element={<TimeOffPage />} />
+        <Route path="/hr/requests" element={<HRRequestsPage />} />
+        <Route path="/hr/feedback" element={<FeedbackPage />} />
+        <Route path="/hr/announcements" element={<AnnouncementsPage />} />
+
+        <Route path="/hiring/dashboard" element={<HiringDashboardPage />} />
+        <Route path="/hiring/requisitions" element={<RequisitionsPage />} />
+        <Route path="/hiring/postings" element={<JobPostingsPage />} />
+        <Route path="/hiring/candidates" element={<CandidatesPage />} />
+        <Route path="/hiring/applications" element={<ApplicationsPage />} />
+        <Route path="/hiring/interviews" element={<InterviewsPage />} />
+        <Route path="/hiring/offers" element={<OffersPage />} />
+        <Route path="/hiring/referrals" element={<ReferralsPage />} />
+
         <Route path="/it/*" element={<PlaceholderPage title="IT Administration" subtitle="Devices, software, baseline, EDR" module="IT Administration" icon={<Laptop size={26} />} />} />
         <Route path="/mobility/*" element={<PlaceholderPage title="Mobility" subtitle="Visas, relocation, immigration, travel" module="Mobility" icon={<Plane size={26} />} />} />
 
