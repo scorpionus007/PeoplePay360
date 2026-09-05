@@ -39,6 +39,7 @@ async function register(req, res) {
     password: req.body.password,
     fullName: req.body.full_name,
     roleKeys: req.body.role_keys || [],
+    actorRoles: req.user.roles || [],
   });
   return created(res, user);
 }
