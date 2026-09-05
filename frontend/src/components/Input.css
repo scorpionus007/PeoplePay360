@@ -45,7 +45,7 @@
 .pp-input:hover:not(:disabled) { border-color: var(--pp-ink-300); }
 .pp-input:focus {
   border-color: var(--pp-primary-500);
-  box-shadow: 0 0 0 3px rgba(109, 92, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(233, 227, 247, 0.9);
 }
 .pp-input:disabled { background: var(--pp-ink-50); color: var(--pp-text-muted); cursor: not-allowed; }
 

@@ -38,7 +38,7 @@ export function LandingFooter() {
         </div>
 
         <p className="pp-foot__pitch">
-          Get the latest insights on today&apos;s world of work delivered straight to your inbox.
+          Run payroll, hiring, HR and mobility from one person record.
         </p>
 
         <div className="pp-foot__subscribe">
