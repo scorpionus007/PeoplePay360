@@ -28,6 +28,16 @@ const HRRequest = require('../modules/hr/models/HRRequest')(sequelize);
 const HRRequestMessage = require('../modules/hr/models/HRRequestMessage')(sequelize);
 const HRAnnouncement = require('../modules/hr/models/HRAnnouncement')(sequelize);
 
+// Mobility module models
+const LocationStandard = require('../modules/mobility/models/LocationStandard')(sequelize);
+const MobilityPartner = require('../modules/mobility/models/MobilityPartner')(sequelize);
+const VisaSponsorship = require('../modules/mobility/models/VisaSponsorship')(sequelize);
+const VisaDocument = require('../modules/mobility/models/VisaDocument')(sequelize);
+const RelocationCase = require('../modules/mobility/models/RelocationCase')(sequelize);
+const RelocationExpense = require('../modules/mobility/models/RelocationExpense')(sequelize);
+const ImmigrationCase = require('../modules/mobility/models/ImmigrationCase')(sequelize);
+const TravelRequest = require('../modules/mobility/models/TravelRequest')(sequelize);
+
 // Hiring module models
 const Requisition = require('../modules/hiring/models/Requisition')(sequelize);
 const JobBoardIntegration = require('../modules/hiring/models/JobBoardIntegration')(sequelize);
@@ -103,6 +113,14 @@ const models = {
   HRRequest,
   HRRequestMessage,
   HRAnnouncement,
+  LocationStandard,
+  MobilityPartner,
+  VisaSponsorship,
+  VisaDocument,
+  RelocationCase,
+  RelocationExpense,
+  ImmigrationCase,
+  TravelRequest,
   Requisition,
   JobBoardIntegration,
   JobPosting,

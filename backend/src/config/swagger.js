@@ -71,6 +71,13 @@ const options = {
       { name: 'Hiring: Offers', description: 'Offer lifecycle' },
       { name: 'Hiring: Referrals', description: 'Employee referrals' },
       { name: 'Hiring: Dashboard', description: 'Hiring KPI dashboard' },
+      { name: 'Mobility: Location Standards', description: 'Country and region standards' },
+      { name: 'Mobility: Partners', description: 'Immigration lawyers, relocation vendors, tax consultants' },
+      { name: 'Mobility: Visa Sponsorships', description: 'Work visa cases and documents' },
+      { name: 'Mobility: Relocations', description: 'Cross border relocations and expenses' },
+      { name: 'Mobility: Immigration Cases', description: 'Permanent residency and family cases' },
+      { name: 'Mobility: Travel Requests', description: 'Business travel approval and booking' },
+      { name: 'Mobility: Dashboard', description: 'Mobility KPI dashboard' },
     ],
     components: {
       securitySchemes: {

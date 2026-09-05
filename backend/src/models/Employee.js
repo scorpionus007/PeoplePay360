@@ -120,6 +120,21 @@ module.exports = (sequelize) => {
         foreignKey: 'referrer_employee_id',
       });
     }
+    if (models.VisaSponsorship) {
+      Employee.hasMany(models.VisaSponsorship, { as: 'visa_cases', foreignKey: 'employee_id' });
+    }
+    if (models.RelocationCase) {
+      Employee.hasMany(models.RelocationCase, { as: 'relocations', foreignKey: 'employee_id' });
+    }
+    if (models.ImmigrationCase) {
+      Employee.hasMany(models.ImmigrationCase, {
+        as: 'immigration_cases',
+        foreignKey: 'employee_id',
+      });
+    }
+    if (models.TravelRequest) {
+      Employee.hasMany(models.TravelRequest, { as: 'travel_requests', foreignKey: 'employee_id' });
+    }
   };
 
   Employee.prototype.fullName = function fullName() {

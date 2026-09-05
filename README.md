@@ -60,6 +60,21 @@ PeoplePay360/
 
 Backend setup and run instructions live in `backend/README.md`. Local Postgres and API can be brought up together with `docker compose up`.
 
+## API Documentation
+
+Swagger UI is served at `http://localhost:4000/api/docs` and the raw OpenAPI spec at `http://localhost:4000/api/docs.json`. The spec covers every endpoint across every module (300+ operations across 46 tag groups).
+
+## Module Docs
+
+Per module reference:
+
+- [Payroll](docs/payroll-module.md)
+- [HR](docs/hr-module.md)
+- [IT Administration](docs/it-admin-module.md)
+- [Benefits](docs/benefits-module.md)
+- [Hiring](docs/hiring-module.md)
+- [Mobility](docs/mobility-module.md)
+
 ## Hackathon
 
 Odoo Hackathon 2026 submission. Problem statement: HR and Payroll integrated operations platform.

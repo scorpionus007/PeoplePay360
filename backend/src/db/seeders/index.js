@@ -5,6 +5,7 @@ const orgSeeder = require('./seedDefaultOrgAndAdmin');
 const hrSeeder = require('./seedDefaultHrData');
 const itSeeder = require('./seedDefaultItData');
 const benefitsSeeder = require('./seedDefaultBenefitsData');
+const mobilitySeeder = require('./seedDefaultMobilityData');
 const logger = require('../../config/logger');
 
 async function runAll() {
@@ -13,6 +14,7 @@ async function runAll() {
   await hrSeeder.seed();
   await itSeeder.seed();
   await benefitsSeeder.seed();
+  await mobilitySeeder.seed();
   logger.info('All seeders completed');
 }
 

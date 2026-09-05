@@ -130,6 +130,23 @@ const PERMISSIONS = Object.freeze({
   REFERRAL_READ: 'referral.read',
   REFERRAL_WRITE: 'referral.write',
   REFERRAL_SUBMIT: 'referral.submit',
+
+  // Mobility
+  LOCATION_STANDARD_READ: 'location.standard.read',
+  LOCATION_STANDARD_WRITE: 'location.standard.write',
+  VISA_READ: 'visa.read',
+  VISA_WRITE: 'visa.write',
+  VISA_APPROVE: 'visa.approve',
+  RELOCATION_READ: 'relocation.read',
+  RELOCATION_WRITE: 'relocation.write',
+  RELOCATION_APPROVE: 'relocation.approve',
+  IMMIGRATION_READ: 'immigration.read',
+  IMMIGRATION_WRITE: 'immigration.write',
+  TRAVEL_READ: 'travel.read',
+  TRAVEL_WRITE: 'travel.write',
+  TRAVEL_APPROVE: 'travel.approve',
+  MOBILITY_PARTNER_READ: 'mobility.partner.read',
+  MOBILITY_PARTNER_WRITE: 'mobility.partner.write',
 });
 
 const EMPLOYMENT_STATUS = Object.freeze({
@@ -385,6 +402,85 @@ const VOUCHER_STATUS = Object.freeze({
   REDEEMED: 'redeemed',
   EXPIRED: 'expired',
   CANCELLED: 'cancelled',
+});
+
+const VISA_TYPE = Object.freeze({
+  WORK_VISA: 'work_visa',
+  BUSINESS_VISA: 'business_visa',
+  DEPENDENT_VISA: 'dependent_visa',
+  PERMANENT_RESIDENCY: 'permanent_residency',
+  STUDENT_VISA: 'student_visa',
+  TRANSIT: 'transit',
+  DIGITAL_NOMAD: 'digital_nomad',
+  OTHER: 'other',
+});
+
+const VISA_STATUS = Object.freeze({
+  INITIATED: 'initiated',
+  DOCUMENTS_COLLECTING: 'documents_collecting',
+  UNDER_INTERNAL_REVIEW: 'under_internal_review',
+  FILED: 'filed',
+  RFE_PENDING: 'rfe_pending',
+  APPROVED: 'approved',
+  DENIED: 'denied',
+  EXPIRED: 'expired',
+  RENEWED: 'renewed',
+  CANCELLED: 'cancelled',
+});
+
+const RELOCATION_STATUS = Object.freeze({
+  REQUESTED: 'requested',
+  APPROVED: 'approved',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+});
+
+const RELOCATION_BUDGET_STATUS = Object.freeze({
+  DRAFT: 'draft',
+  APPROVED: 'approved',
+  EXHAUSTED: 'exhausted',
+  CLOSED: 'closed',
+});
+
+const IMMIGRATION_CASE_TYPE = Object.freeze({
+  WORK_VISA: 'work_visa',
+  PERMANENT_RESIDENCY: 'permanent_residency',
+  FAMILY_SPONSORSHIP: 'family_sponsorship',
+  CITIZENSHIP: 'citizenship',
+  RENEWAL: 'renewal',
+  APPEAL: 'appeal',
+});
+
+const IMMIGRATION_CASE_STATUS = Object.freeze({
+  OPEN: 'open',
+  IN_PROGRESS: 'in_progress',
+  ON_HOLD: 'on_hold',
+  ESCALATED: 'escalated',
+  RESOLVED: 'resolved',
+  CANCELLED: 'cancelled',
+});
+
+const TRAVEL_STATUS = Object.freeze({
+  DRAFT: 'draft',
+  SUBMITTED: 'submitted',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+  BOOKED: 'booked',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+});
+
+const MOBILITY_PARTNER_CATEGORY = Object.freeze({
+  IMMIGRATION_LAWYER: 'immigration_lawyer',
+  RELOCATION_AGENCY: 'relocation_agency',
+  TAX_CONSULTANT: 'tax_consultant',
+  HOUSING: 'housing',
+  INSURANCE: 'insurance',
+  LANGUAGE_TRAINING: 'language_training',
+  TRAVEL_AGENCY: 'travel_agency',
+  OTHER: 'other',
 });
 
 const REQUISITION_STATUS = Object.freeze({
@@ -645,4 +741,12 @@ module.exports = {
   INTERVIEW_RECOMMENDATION,
   OFFER_STATUS,
   REFERRAL_STATUS,
+  VISA_TYPE,
+  VISA_STATUS,
+  RELOCATION_STATUS,
+  RELOCATION_BUDGET_STATUS,
+  IMMIGRATION_CASE_TYPE,
+  IMMIGRATION_CASE_STATUS,
+  TRAVEL_STATUS,
+  MOBILITY_PARTNER_CATEGORY,
 };
