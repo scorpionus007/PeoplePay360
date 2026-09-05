@@ -40,18 +40,22 @@ function monthRange(offsetMonths) {
 const round = (n) => Math.round(Number(n) * 100) / 100;
 
 // ---- employee blueprint ---------------------------------------------------
+// Every employee gets a login account so the whole team can sign in, and the
+// role assignments cover all eight system roles for RBAC demos.
 const EMPLOYEES = [
-  { key: 'ava', first: 'Ava', last: 'Thompson', title: 'Chief Technology Officer', dept: 'Engineering', country: 'US', city: 'New York', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 18000, mgr: null },
-  { key: 'liam', first: 'Liam', last: 'Patel', title: 'Engineering Manager', dept: 'Engineering', country: 'US', city: 'Austin', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 12000, mgr: 'ava' },
+  { key: 'ava', first: 'Ava', last: 'Thompson', title: 'Chief Technology Officer', dept: 'Engineering', country: 'US', city: 'New York', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 18000, mgr: null, login: C.ROLES.ADMIN },
+  { key: 'liam', first: 'Liam', last: 'Patel', title: 'Engineering Manager', dept: 'Engineering', country: 'US', city: 'Austin', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 12000, mgr: 'ava', login: C.ROLES.EMPLOYEE },
   { key: 'sofia', first: 'Sofia', last: 'Garcia', title: 'Senior Software Engineer', dept: 'Engineering', country: 'IN', city: 'Bengaluru', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 9000, mgr: 'liam', login: C.ROLES.EMPLOYEE },
-  { key: 'noah', first: 'Noah', last: 'Kim', title: 'Software Engineer', dept: 'Engineering', country: 'IN', city: 'Hyderabad', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 6500, mgr: 'liam' },
-  { key: 'emma', first: 'Emma', last: 'Mueller', title: 'Product Manager', dept: 'Product', country: 'DE', city: 'Berlin', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 10000, mgr: 'ava' },
-  { key: 'oliver', first: 'Oliver', last: 'Smith', title: 'Product Designer', dept: 'Product', country: 'GB', city: 'London', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 7000, mgr: 'emma' },
-  { key: 'isabella', first: 'Isabella', last: 'Rossi', title: 'Sales Lead', dept: 'Sales', country: 'GB', city: 'Manchester', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 11000, mgr: 'ava' },
-  { key: 'lucas', first: 'Lucas', last: 'Silva', title: 'Account Executive', dept: 'Sales', country: 'US', city: 'Chicago', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 6000, mgr: 'isabella' },
+  { key: 'noah', first: 'Noah', last: 'Kim', title: 'Software Engineer', dept: 'Engineering', country: 'IN', city: 'Hyderabad', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 6500, mgr: 'liam', login: C.ROLES.EMPLOYEE },
+  { key: 'emma', first: 'Emma', last: 'Mueller', title: 'Product Manager', dept: 'Product', country: 'DE', city: 'Berlin', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 10000, mgr: 'ava', login: C.ROLES.EMPLOYEE },
+  { key: 'oliver', first: 'Oliver', last: 'Smith', title: 'Product Designer', dept: 'Product', country: 'GB', city: 'London', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 7000, mgr: 'emma', login: C.ROLES.EMPLOYEE },
+  { key: 'isabella', first: 'Isabella', last: 'Rossi', title: 'Sales Lead', dept: 'Sales', country: 'GB', city: 'Manchester', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 11000, mgr: 'ava', login: C.ROLES.EMPLOYEE },
+  { key: 'lucas', first: 'Lucas', last: 'Silva', title: 'Account Executive', dept: 'Sales', country: 'US', city: 'Chicago', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 6000, mgr: 'isabella', login: C.ROLES.EMPLOYEE },
   { key: 'mia', first: 'Mia', last: 'Chen', title: 'People Operations Manager', dept: 'People Ops', country: 'US', city: 'San Francisco', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 9500, mgr: 'ava', login: C.ROLES.HR_MANAGER },
-  { key: 'ethan', first: 'Ethan', last: 'Brown', title: 'HR Specialist', dept: 'People Ops', country: 'US', city: 'San Francisco', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 5500, mgr: 'mia' },
+  { key: 'ethan', first: 'Ethan', last: 'Brown', title: 'HR Specialist', dept: 'People Ops', country: 'US', city: 'San Francisco', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 5500, mgr: 'mia', login: C.ROLES.HR },
+  { key: 'diego', first: 'Diego', last: 'Fernandez', title: 'Talent Acquisition Lead', dept: 'People Ops', country: 'US', city: 'San Francisco', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 8000, mgr: 'mia', login: C.ROLES.TALENT_ACQUISITION_LEAD },
   { key: 'aria', first: 'Aria', last: 'Nakamura', title: 'Finance Manager', dept: 'Finance', country: 'US', city: 'Seattle', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 10500, mgr: 'ava', login: C.ROLES.PAYROLL_MANAGER },
+  { key: 'priya', first: 'Priya', last: 'Sharma', title: 'Payroll Analyst', dept: 'Finance', country: 'IN', city: 'Pune', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 6000, mgr: 'aria', login: C.ROLES.PAYROLL_USER },
   { key: 'james', first: 'James', last: 'Wilson', title: 'IT Administrator', dept: 'IT', country: 'US', city: 'Denver', type: C.EMPLOYEE_TYPE.FULL_TIME, gross: 7500, mgr: 'ava', login: C.ROLES.IT_ADMIN },
 ];
 
