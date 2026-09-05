@@ -1,0 +1,45 @@
+.pp-modules {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  background: #fff;
+  color: #000;
+}
+
+.pp-modules__inner {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 72px 36px 80px;
+}
+
+.pp-modules__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.28em;
+  font-size: clamp(2.2rem, 6.5vw, 4.4rem);
+  color: #000;
+  margin: 0 0 28px;
+}
+
+.pp-modules__heading .pp-logo__strong,
+.pp-modules__heading .pp-logo__weak {
+  color: #000;
+}
+
+.pp-modules__word {
+  display: inline-flex;
+  align-items: baseline;
+  will-change: transform, opacity;
+}
+
+.pp-modules__cards {
+  width: 100%;
+}
+
+@media (max-width: 820px) {
+  .pp-modules__inner {
+    padding: 56px 16px 64px;
+  }
+}
