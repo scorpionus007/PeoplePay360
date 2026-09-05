@@ -7,7 +7,7 @@ import './ModulesSection.css';
 const MODULES = [
   {
     title: 'Payroll',
-    summary: 'Salary structures, sequenced rules, contracts, payruns and payslips — with a two-step check before funds move.',
+    summary: 'Salary structures, sequenced rules, contracts, payruns and payslips, with a two-step check before funds move.',
     details: ['Period-based contracts', 'Rule order you can read', 'Warnings before validate'],
     tone: '#e9e3f7',
   },

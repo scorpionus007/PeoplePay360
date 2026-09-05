@@ -11,7 +11,7 @@ export type Skiper23Item = {
 };
 
 /**
- * Skiper 23 — Minimal card expand
+ * Skiper 23: Minimal card expand
  * Inspired by Family app / jakub.kr · https://skiper-ui.com/v1/skiper23
  * Attribution to Skiper UI required on the free version.
  */
