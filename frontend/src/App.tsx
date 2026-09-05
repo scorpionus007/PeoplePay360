@@ -1,5 +1,7 @@
+import { JSX } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
+import { RequirePermission } from './auth/RequirePermission';
 import { AppShell } from './layout/AppShell';
 import { LoginPage } from './pages/Login';
 import { LandingPage } from './pages/Landing';
@@ -68,6 +70,11 @@ function ProtectedRoute({ children }: { children: JSX.Element }) {
   return children;
 }
 
+/** Wrap a route element in a permission guard (admin always passes). */
+function guard(element: JSX.Element, ...anyPerm: string[]) {
+  return <RequirePermission anyPerm={anyPerm}>{element}</RequirePermission>;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -82,61 +89,61 @@ export default function App() {
       >
         <Route path="/dashboard" element={<DashboardPage />} />
 
-        <Route path="/employees" element={<EmployeesPage />} />
-        <Route path="/departments" element={<DepartmentsPage />} />
+        <Route path="/employees" element={guard(<EmployeesPage />, 'employee.read')} />
+        <Route path="/departments" element={guard(<DepartmentsPage />, 'department.read')} />
         <Route path="/settings" element={<SettingsPage />} />
 
-        <Route path="/payroll/dashboard" element={<PayrollDashboardPage />} />
-        <Route path="/payroll/salary-rules" element={<SalaryRulesPage />} />
-        <Route path="/payroll/salary-structures" element={<SalaryStructuresPage />} />
-        <Route path="/payroll/salary-structures/:id" element={<SalaryStructureDetailPage />} />
-        <Route path="/payroll/contracts" element={<ContractsPage />} />
-        <Route path="/payroll/payruns" element={<PayrunsPage />} />
-        <Route path="/payroll/payruns/:id" element={<PayrunDetailPage />} />
-        <Route path="/payroll/payslips" element={<PayslipsPage />} />
-        <Route path="/payroll/payslips/:id" element={<PayslipDetailPage />} />
-        <Route path="/payroll/advance-salary" element={<AdvanceSalaryPage />} />
-        <Route path="/payroll/bonuses" element={<BonusesPage />} />
-        <Route path="/payroll/salary-changes" element={<SalaryChangesPage />} />
+        <Route path="/payroll/dashboard" element={guard(<PayrollDashboardPage />, 'payroll.read')} />
+        <Route path="/payroll/salary-rules" element={guard(<SalaryRulesPage />, 'payroll.rule.read', 'payroll.read')} />
+        <Route path="/payroll/salary-structures" element={guard(<SalaryStructuresPage />, 'payroll.structure.read', 'payroll.read')} />
+        <Route path="/payroll/salary-structures/:id" element={guard(<SalaryStructureDetailPage />, 'payroll.structure.read', 'payroll.read')} />
+        <Route path="/payroll/contracts" element={guard(<ContractsPage />, 'contract.read')} />
+        <Route path="/payroll/payruns" element={guard(<PayrunsPage />, 'payrun.read')} />
+        <Route path="/payroll/payruns/:id" element={guard(<PayrunDetailPage />, 'payrun.read')} />
+        <Route path="/payroll/payslips" element={guard(<PayslipsPage />, 'payslip.read')} />
+        <Route path="/payroll/payslips/:id" element={guard(<PayslipDetailPage />, 'payslip.read')} />
+        <Route path="/payroll/advance-salary" element={guard(<AdvanceSalaryPage />, 'advance.salary.request', 'advance.salary.approve')} />
+        <Route path="/payroll/bonuses" element={guard(<BonusesPage />, 'bonus.manage', 'payroll.read')} />
+        <Route path="/payroll/salary-changes" element={guard(<SalaryChangesPage />, 'salary.change.suggest', 'salary.change.decide', 'salary.change.approve')} />
 
-        <Route path="/benefits/dashboard" element={<BenefitsDashboardPage />} />
-        <Route path="/benefits/plans" element={<BenefitPlansPage />} />
-        <Route path="/benefits/enrollments" element={<BenefitEnrollmentsPage />} />
-        <Route path="/benefits/claims" element={<BenefitClaimsPage />} />
-        <Route path="/benefits/loans" element={<LoansPage />} />
-        <Route path="/benefits/vouchers" element={<VouchersPage />} />
+        <Route path="/benefits/dashboard" element={guard(<BenefitsDashboardPage />, 'benefit.plan.read')} />
+        <Route path="/benefits/plans" element={guard(<BenefitPlansPage />, 'benefit.plan.read')} />
+        <Route path="/benefits/enrollments" element={guard(<BenefitEnrollmentsPage />, 'benefit.enrollment.read')} />
+        <Route path="/benefits/claims" element={guard(<BenefitClaimsPage />, 'benefit.claim.read')} />
+        <Route path="/benefits/loans" element={guard(<LoansPage />, 'loan.request.read')} />
+        <Route path="/benefits/vouchers" element={guard(<VouchersPage />, 'voucher.read')} />
 
-        <Route path="/hr/dashboard" element={<HRDashboardPage />} />
-        <Route path="/hr/attendance" element={<AttendancePage />} />
-        <Route path="/hr/schedules" element={<WorkingSchedulesPage />} />
-        <Route path="/hr/time-off" element={<TimeOffPage />} />
-        <Route path="/hr/requests" element={<HRRequestsPage />} />
-        <Route path="/hr/feedback" element={<FeedbackPage />} />
+        <Route path="/hr/dashboard" element={guard(<HRDashboardPage />, 'hr.request.read', 'attendance.read')} />
+        <Route path="/hr/attendance" element={guard(<AttendancePage />, 'attendance.read', 'attendance.self.write')} />
+        <Route path="/hr/schedules" element={guard(<WorkingSchedulesPage />, 'working_schedule.read')} />
+        <Route path="/hr/time-off" element={guard(<TimeOffPage />, 'timeoff.request.read', 'timeoff.request.write')} />
+        <Route path="/hr/requests" element={guard(<HRRequestsPage />, 'hr.request.read')} />
+        <Route path="/hr/feedback" element={guard(<FeedbackPage />, 'feedback.read', 'feedback.write')} />
         <Route path="/hr/announcements" element={<AnnouncementsPage />} />
 
-        <Route path="/hiring/dashboard" element={<HiringDashboardPage />} />
-        <Route path="/hiring/requisitions" element={<RequisitionsPage />} />
-        <Route path="/hiring/postings" element={<JobPostingsPage />} />
-        <Route path="/hiring/candidates" element={<CandidatesPage />} />
-        <Route path="/hiring/applications" element={<ApplicationsPage />} />
-        <Route path="/hiring/interviews" element={<InterviewsPage />} />
-        <Route path="/hiring/offers" element={<OffersPage />} />
-        <Route path="/hiring/referrals" element={<ReferralsPage />} />
+        <Route path="/hiring/dashboard" element={guard(<HiringDashboardPage />, 'requisition.read', 'application.read')} />
+        <Route path="/hiring/requisitions" element={guard(<RequisitionsPage />, 'requisition.read')} />
+        <Route path="/hiring/postings" element={guard(<JobPostingsPage />, 'job.posting.read')} />
+        <Route path="/hiring/candidates" element={guard(<CandidatesPage />, 'candidate.read')} />
+        <Route path="/hiring/applications" element={guard(<ApplicationsPage />, 'application.read')} />
+        <Route path="/hiring/interviews" element={guard(<InterviewsPage />, 'interview.read')} />
+        <Route path="/hiring/offers" element={guard(<OffersPage />, 'offer.read')} />
+        <Route path="/hiring/referrals" element={guard(<ReferralsPage />, 'referral.submit', 'referral.read')} />
 
-        <Route path="/it/dashboard" element={<ITDashboardPage />} />
-        <Route path="/it/devices" element={<DevicesPage />} />
-        <Route path="/it/software" element={<SoftwarePage />} />
-        <Route path="/it/baseline" element={<BaselinePage />} />
-        <Route path="/it/edr" element={<EdrPage />} />
-        <Route path="/it/onboarding" element={<OnboardingPage />} />
+        <Route path="/it/dashboard" element={guard(<ITDashboardPage />, 'it.device.read')} />
+        <Route path="/it/devices" element={guard(<DevicesPage />, 'it.device.read')} />
+        <Route path="/it/software" element={guard(<SoftwarePage />, 'it.software.read')} />
+        <Route path="/it/baseline" element={guard(<BaselinePage />, 'it.baseline.read')} />
+        <Route path="/it/edr" element={guard(<EdrPage />, 'it.edr.read')} />
+        <Route path="/it/onboarding" element={guard(<OnboardingPage />, 'it.onboarding.read')} />
 
-        <Route path="/mobility/dashboard" element={<MobilityDashboardPage />} />
-        <Route path="/mobility/location-standards" element={<LocationStandardsPage />} />
-        <Route path="/mobility/partners" element={<MobilityPartnersPage />} />
-        <Route path="/mobility/visas" element={<VisasPage />} />
-        <Route path="/mobility/relocations" element={<RelocationsPage />} />
-        <Route path="/mobility/immigration" element={<ImmigrationCasesPage />} />
-        <Route path="/mobility/travel" element={<TravelPage />} />
+        <Route path="/mobility/dashboard" element={guard(<MobilityDashboardPage />, 'visa.read', 'location.standard.read')} />
+        <Route path="/mobility/location-standards" element={guard(<LocationStandardsPage />, 'location.standard.read')} />
+        <Route path="/mobility/partners" element={guard(<MobilityPartnersPage />, 'mobility.partner.read')} />
+        <Route path="/mobility/visas" element={guard(<VisasPage />, 'visa.read')} />
+        <Route path="/mobility/relocations" element={guard(<RelocationsPage />, 'relocation.read')} />
+        <Route path="/mobility/immigration" element={guard(<ImmigrationCasesPage />, 'immigration.read')} />
+        <Route path="/mobility/travel" element={guard(<TravelPage />, 'travel.read')} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Route>
