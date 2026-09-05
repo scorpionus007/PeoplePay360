@@ -19,7 +19,7 @@ const MODULES = [
   },
   {
     title: 'Payroll',
-    summary: 'Salary structures, sequenced rules, contracts, payruns and payslips — with a two-step check before funds move.',
+    summary: 'Salary structures, sequenced rules, contracts, payruns and payslips, with a two-step check before funds move.',
   },
   {
     title: 'IT',

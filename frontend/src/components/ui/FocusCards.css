@@ -12,6 +12,7 @@
   overflow: hidden;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: var(--pp-shadow-lg);
   color: #000;
   cursor: default;
   transition: filter 0.3s ease-out, transform 0.3s ease-out;

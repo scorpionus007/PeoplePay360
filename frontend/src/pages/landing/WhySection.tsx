@@ -63,7 +63,7 @@ function WhyBody({ progress }: { progress: MotionValue<number> }) {
         spreadsheets.
       </p>
       <p className="pp-why__para">
-        PeoplePay is built for the work that happens after someone joins — and the
+        PeoplePay is built for the work that happens after someone joins, and the
         work that has to be true before they are paid. A requisition becomes an
         offer, an offer becomes a contract, a contract becomes a payrun, and the
         same person record carries devices, leave, claims, loans and visas with it.
