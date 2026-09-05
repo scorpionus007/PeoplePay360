@@ -1,5 +1,9 @@
 version: "3.9"
 
+# Images are published on Docker Hub under scorpionus007. `docker compose up`
+# pulls those images; `docker compose build` rebuilds and re-tags them.
+# Override the namespace/tag with IMAGE_NAMESPACE / IMAGE_TAG if needed.
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -20,6 +24,7 @@ services:
       retries: 10
 
   backend:
+    image: ${IMAGE_NAMESPACE:-scorpionus007}/peoplepay360-backend:${IMAGE_TAG:-latest}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -29,6 +34,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      # development so the server syncs the schema and seeds demo data on boot
       NODE_ENV: development
       PORT: 4000
       DB_HOST: postgres
@@ -40,12 +46,21 @@ services:
       JWT_REFRESH_SECRET: change_me_refresh_secret
       JWT_ACCESS_TTL: 15m
       JWT_REFRESH_TTL: 7d
-      CORS_ORIGIN: http://localhost:5173
+      CORS_ORIGIN: http://localhost:8080
     ports:
       - "4000:4000"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+
+  frontend:
+    image: ${IMAGE_NAMESPACE:-scorpionus007}/peoplepay360-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: peoplepay360_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
 
 volumes:
   pgdata:

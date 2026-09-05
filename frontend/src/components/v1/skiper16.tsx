@@ -9,7 +9,7 @@ export type StickyCardProject = {
 };
 
 /**
- * Skiper 16 — Card stack scroll
+ * Skiper 16: Card stack scroll
  * https://skiper-ui.com/v1/skiper16
  * Attribution to Skiper UI required on the free version.
  */

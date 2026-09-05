@@ -56,8 +56,11 @@ exports.createDevice = Joi.object({
   metadata: Joi.object().default({}),
 });
 
+// On update, assignment is managed through the assign/unassign endpoints, so
+// status and assigned_employee_id cannot be set directly here.
 exports.updateDevice = exports.createDevice
   .fork(['asset_tag'], (s) => s.optional())
+  .fork(['status', 'assigned_employee_id'], (s) => s.forbidden())
   .keys({});
 
 exports.assignDevice = Joi.object({

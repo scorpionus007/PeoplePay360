@@ -228,19 +228,19 @@ router.patch(
 router.get('/announcements', asyncHandler(announcement.list));
 router.post(
   '/announcements',
-  requirePermission(PERMISSIONS.HR_REQUEST_READ),
+  requirePermission(PERMISSIONS.HR_REQUEST_WRITE),
   validate({ body: V.createAnnouncement }),
   asyncHandler(announcement.create)
 );
 router.patch(
   '/announcements/:id',
-  requirePermission(PERMISSIONS.HR_REQUEST_READ),
+  requirePermission(PERMISSIONS.HR_REQUEST_WRITE),
   validate({ params: V.idParam, body: V.updateAnnouncement }),
   asyncHandler(announcement.update)
 );
 router.delete(
   '/announcements/:id',
-  requirePermission(PERMISSIONS.HR_REQUEST_READ),
+  requirePermission(PERMISSIONS.HR_REQUEST_WRITE),
   validate({ params: V.idParam }),
   asyncHandler(announcement.remove)
 );

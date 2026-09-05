@@ -57,45 +57,52 @@ async function assignToDevice(req, res) {
     });
     if (!device) throw AppError.notFound('Device not found');
 
+    // Lock the catalog row so the capacity check and the seat increment are
+    // atomic under concurrent installs.
     const software = await models.SoftwareCatalogItem.findOne({
       where: { id: softwareId, organization_id: req.user.organizationId },
+      lock: transaction.LOCK.UPDATE,
       transaction,
     });
     if (!software) throw AppError.notFound('Software item not found');
 
-    if (
-      software.total_seats !== null &&
-      software.total_seats !== undefined &&
-      Number(software.seats_allocated || 0) >= Number(software.total_seats)
-    ) {
-      throw AppError.conflict('No seats available for this software');
-    }
-
-    const [row, wasCreated] = await models.DeviceSoftware.findOrCreate({
+    const existing = await models.DeviceSoftware.findOne({
       where: { device_id: deviceId, software_catalog_item_id: softwareId },
-      defaults: {
-        device_id: deviceId,
-        software_catalog_item_id: softwareId,
-        installed_at: new Date(),
-        version: version || software.version || null,
-        status: status || 'installed',
-        license_reference: license || null,
-        installed_by: req.user.id,
-      },
       transaction,
     });
 
-    if (wasCreated) {
+    if (!existing) {
+      // Only a brand-new install consumes a seat, so the capacity check runs
+      // only here (updates to an existing install never fail on capacity).
+      if (
+        software.total_seats !== null &&
+        software.total_seats !== undefined &&
+        Number(software.seats_allocated || 0) >= Number(software.total_seats)
+      ) {
+        throw AppError.conflict('No seats available for this software');
+      }
+      const row = await models.DeviceSoftware.create(
+        {
+          device_id: deviceId,
+          software_catalog_item_id: softwareId,
+          installed_at: new Date(),
+          version: version || software.version || null,
+          status: status || 'installed',
+          license_reference: license || null,
+          installed_by: req.user.id,
+        },
+        { transaction }
+      );
       software.seats_allocated = Number(software.seats_allocated || 0) + 1;
       await software.save({ transaction });
-    } else {
-      if (version) row.version = version;
-      if (status) row.status = status;
-      if (license !== undefined) row.license_reference = license;
-      await row.save({ transaction });
+      return created(res, row);
     }
 
-    return created(res, row);
+    if (version) existing.version = version;
+    if (status) existing.status = status;
+    if (license !== undefined) existing.license_reference = license;
+    await existing.save({ transaction });
+    return created(res, existing);
   });
 }
 

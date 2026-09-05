@@ -10,6 +10,9 @@ function newVoucherCode() {
 }
 
 async function issue({ organizationId, employeeId, partnerName, category, amount, currency, validFrom, validTo, note, issuedBy }) {
+  if (validFrom && validTo && String(validFrom) > String(validTo)) {
+    throw AppError.unprocessable('Voucher valid_from cannot be after valid_to');
+  }
   return models.GiftVoucher.create({
     organization_id: organizationId,
     employee_id: employeeId || null,
@@ -52,6 +55,9 @@ async function redeem({ organizationId, id, redemptionReference }) {
     voucher.status = VOUCHER_STATUS.EXPIRED;
     await voucher.save();
     throw AppError.conflict('Voucher has expired');
+  }
+  if (voucher.valid_from && new Date(voucher.valid_from) > new Date()) {
+    throw AppError.conflict('Voucher is not yet valid');
   }
   voucher.status = VOUCHER_STATUS.REDEEMED;
   voucher.redeemed_at = new Date();

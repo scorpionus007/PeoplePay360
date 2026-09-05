@@ -49,7 +49,9 @@ async function approve({ organizationId, id, approverUserId, note }) {
   if (![OFFER_STATUS.DRAFT, OFFER_STATUS.PENDING_APPROVAL].includes(offer.status)) {
     throw AppError.conflict('Offer is not in an approvable state');
   }
-  offer.status = OFFER_STATUS.PENDING_APPROVAL === offer.status ? OFFER_STATUS.EXTENDED : offer.status;
+  // Approving records the approver and puts the offer in the approved
+  // (pending_approval) state, from which it can be extended to the candidate.
+  offer.status = OFFER_STATUS.PENDING_APPROVAL;
   offer.approved_by = approverUserId;
   offer.approved_at = new Date();
   offer.approval_note = note || null;
@@ -64,8 +66,9 @@ async function extend({ organizationId, id, actorUserId }) {
       transaction,
     });
     if (!offer) throw AppError.notFound('Offer not found');
-    if (![OFFER_STATUS.DRAFT, OFFER_STATUS.PENDING_APPROVAL].includes(offer.status)) {
-      throw AppError.conflict('Offer cannot be extended in current state');
+    // An offer must be approved before it can be extended to the candidate.
+    if (offer.status !== OFFER_STATUS.PENDING_APPROVAL || !offer.approved_at) {
+      throw AppError.conflict('Offer must be approved before it can be extended');
     }
     offer.status = OFFER_STATUS.EXTENDED;
     offer.extended_at = new Date();
@@ -101,6 +104,12 @@ async function accept({ organizationId, id, note, actorUserId }) {
     if (!offer) throw AppError.notFound('Offer not found');
     if (![OFFER_STATUS.EXTENDED, OFFER_STATUS.NEGOTIATING].includes(offer.status)) {
       throw AppError.conflict('Only extended offers can be accepted');
+    }
+    // A lapsed offer cannot be accepted; flip it to expired instead.
+    if (offer.expires_at && new Date(offer.expires_at) < new Date()) {
+      offer.status = OFFER_STATUS.EXPIRED;
+      await offer.save({ transaction });
+      throw AppError.conflict('This offer has expired');
     }
     offer.status = OFFER_STATUS.ACCEPTED;
     offer.responded_at = new Date();

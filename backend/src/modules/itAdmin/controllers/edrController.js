@@ -60,7 +60,7 @@ async function ingestEvent(req, res) {
   });
   if (!integration) throw AppError.notFound('EDR integration not found');
 
-  const event = await models.EdrEvent.create({
+  const defaults = {
     organization_id: req.user.organizationId,
     edr_integration_id: integration.id,
     device_id: req.body.device_id || null,
@@ -71,7 +71,19 @@ async function ingestEvent(req, res) {
     title: req.body.title || null,
     summary: req.body.summary || null,
     raw_payload: req.body.raw_payload || {},
-  });
+  };
+
+  // Vendors retry webhooks; dedupe on (integration, external_event_id) so a
+  // redelivery is idempotent instead of a 500 from the unique constraint.
+  let event;
+  if (req.body.external_event_id) {
+    [event] = await models.EdrEvent.findOrCreate({
+      where: { edr_integration_id: integration.id, external_event_id: req.body.external_event_id },
+      defaults,
+    });
+  } else {
+    event = await models.EdrEvent.create(defaults);
+  }
 
   integration.last_synced_at = new Date();
   if (integration.status !== 'connected') integration.status = 'connected';
@@ -109,7 +121,12 @@ async function updateEventStatus(req, res) {
   if (!row) throw AppError.notFound('Event not found');
   row.status = req.body.status;
   if (req.body.assigned_to !== undefined) row.assigned_to = req.body.assigned_to;
-  if (['resolved', 'false_positive'].includes(req.body.status)) row.resolved_at = new Date();
+  if (['resolved', 'false_positive'].includes(req.body.status)) {
+    row.resolved_at = new Date();
+  } else {
+    // Reopening an event clears the stale resolution timestamp.
+    row.resolved_at = null;
+  }
   await row.save();
   return success(res, row);
 }

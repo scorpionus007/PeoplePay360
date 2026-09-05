@@ -22,15 +22,28 @@ async function initiate({ organizationId, payload }) {
   });
 }
 
-async function transition({ organizationId, id, toStatus, actorUserId, note }) {
+const VISA_TRANSITIONS = {
+  [VISA_STATUS.INITIATED]: [VISA_STATUS.DOCUMENTS_COLLECTING, VISA_STATUS.CANCELLED],
+  [VISA_STATUS.DOCUMENTS_COLLECTING]: [VISA_STATUS.UNDER_INTERNAL_REVIEW, VISA_STATUS.CANCELLED],
+  [VISA_STATUS.UNDER_INTERNAL_REVIEW]: [VISA_STATUS.FILED, VISA_STATUS.CANCELLED],
+  [VISA_STATUS.FILED]: [VISA_STATUS.RFE_PENDING, VISA_STATUS.APPROVED, VISA_STATUS.DENIED, VISA_STATUS.CANCELLED],
+  [VISA_STATUS.RFE_PENDING]: [VISA_STATUS.FILED, VISA_STATUS.APPROVED, VISA_STATUS.DENIED, VISA_STATUS.CANCELLED],
+  [VISA_STATUS.APPROVED]: [VISA_STATUS.EXPIRED],
+  [VISA_STATUS.DENIED]: [],
+  [VISA_STATUS.EXPIRED]: [],
+  [VISA_STATUS.RENEWED]: [],
+  [VISA_STATUS.CANCELLED]: [],
+};
+
+async function transition({ organizationId, id, toStatus, actorUserId, note, validFrom, validTo }) {
   const row = await models.VisaSponsorship.findOne({
     where: { id, organization_id: organizationId },
   });
   if (!row) throw AppError.notFound('Visa case not found');
 
-  const terminal = [VISA_STATUS.APPROVED, VISA_STATUS.DENIED, VISA_STATUS.EXPIRED, VISA_STATUS.RENEWED, VISA_STATUS.CANCELLED];
-  if (terminal.includes(row.status) && toStatus !== VISA_STATUS.RENEWED) {
-    throw AppError.conflict('Visa case is already in a terminal state');
+  const allowed = VISA_TRANSITIONS[row.status] || [];
+  if (!allowed.includes(toStatus)) {
+    throw AppError.conflict(`Cannot move a visa case from ${row.status} to ${toStatus}`);
   }
 
   row.status = toStatus;
@@ -40,6 +53,9 @@ async function transition({ organizationId, id, toStatus, actorUserId, note }) {
     row.approved_by = actorUserId;
     row.approved_at = new Date();
     row.approval_note = note || row.approval_note;
+    // Set the validity window so expiry tracking / the "expiring soon" KPI work.
+    row.valid_from = validFrom || new Date().toISOString().slice(0, 10);
+    row.valid_to = validTo || require('dayjs')().add(1, 'year').format('YYYY-MM-DD');
   }
   if (toStatus === VISA_STATUS.DENIED) row.denial_reason = note || row.denial_reason;
   await row.save();

@@ -56,7 +56,10 @@ async function getOne(req, res) {
 }
 
 async function submit(req, res) {
-  const referrer = req.body.referrer_employee_id || req.user.employeeId;
+  // A referrer can only attribute a referral to themselves; a recruiter may
+  // attribute it to another employee.
+  const canActForOthers = (req.user.roles || []).includes('admin') || (req.user.permissions || []).includes('referral.write');
+  const referrer = canActForOthers && req.body.referrer_employee_id ? req.body.referrer_employee_id : req.user.employeeId;
   if (!referrer) throw AppError.badRequest('No referrer employee associated');
   const row = await referralService.submit({
     organizationId: req.user.organizationId,

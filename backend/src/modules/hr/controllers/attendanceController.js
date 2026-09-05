@@ -41,8 +41,15 @@ async function getOne(req, res) {
   return success(res, row);
 }
 
+function attendanceEmployeeId(req) {
+  // Self-write users can only stamp their own attendance; full write can act
+  // for another employee.
+  const canActForOthers = (req.user.roles || []).includes('admin') || (req.user.permissions || []).includes('attendance.write');
+  return canActForOthers && req.body.employee_id ? req.body.employee_id : req.user.employeeId;
+}
+
 async function checkIn(req, res) {
-  const employeeId = req.body.employee_id || req.user.employeeId;
+  const employeeId = attendanceEmployeeId(req);
   if (!employeeId) throw AppError.badRequest('No employee associated with this user');
   const row = await attendanceService.checkIn({
     organizationId: req.user.organizationId,
@@ -57,7 +64,7 @@ async function checkIn(req, res) {
 }
 
 async function checkOut(req, res) {
-  const employeeId = req.body.employee_id || req.user.employeeId;
+  const employeeId = attendanceEmployeeId(req);
   if (!employeeId) throw AppError.badRequest('No employee associated with this user');
   const row = await attendanceService.checkOut({
     organizationId: req.user.organizationId,

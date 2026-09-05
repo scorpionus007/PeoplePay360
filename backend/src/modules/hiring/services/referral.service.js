@@ -7,6 +7,11 @@ const { REFERRAL_STATUS } = require('../../../config/constants');
 async function submit({ organizationId, referrerEmployeeId, payload }) {
   return sequelize.transaction(async (transaction) => {
     if (!referrerEmployeeId) throw AppError.badRequest('Referrer employee is required');
+    const referrer = await models.Employee.findOne({
+      where: { id: referrerEmployeeId, organization_id: organizationId },
+      transaction,
+    });
+    if (!referrer) throw AppError.unprocessable('Referrer is not an employee of your organization');
     if (payload.requisition_id) {
       const req = await models.Requisition.findOne({
         where: { id: payload.requisition_id, organization_id: organizationId },
@@ -63,6 +68,13 @@ async function review({ organizationId, id, reviewerUserId, status, note }) {
     [REFERRAL_STATUS.HIRED, REFERRAL_STATUS.BONUS_PAID, REFERRAL_STATUS.CANCELLED].includes(referral.status)
   ) {
     throw AppError.conflict('Referral is in a terminal state');
+  }
+  // A reviewer may only triage the referral. 'hired' is set automatically when
+  // the linked application is hired, and 'bonus_paid' via the payout endpoint;
+  // neither can be set manually here.
+  const allowed = [REFERRAL_STATUS.IN_REVIEW, REFERRAL_STATUS.ADVANCED, REFERRAL_STATUS.REJECTED, REFERRAL_STATUS.CANCELLED];
+  if (!allowed.includes(status)) {
+    throw AppError.unprocessable('A referral review can only set in_review, advanced, rejected or cancelled');
   }
   referral.status = status;
   referral.reviewer_id = reviewerUserId;

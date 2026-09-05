@@ -39,19 +39,26 @@ async function endPreviousActiveContracts({ employeeId, newStartDate, transactio
   const dayBefore = new Date(newStartDate);
   dayBefore.setDate(dayBefore.getDate() - 1);
   const cutoff = dayBefore.toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  const isFutureChange = newStartDate > today;
 
-  await models.Contract.update(
-    { status: CONTRACT_STATUS.EXPIRED, end_date: cutoff },
-    {
-      where: {
-        employee_id: employeeId,
-        status: CONTRACT_STATUS.ACTIVE,
-        start_date: { [Op.lt]: newStartDate },
-        [Op.or]: [{ end_date: null }, { end_date: { [Op.gte]: newStartDate } }],
-      },
-      transaction,
-    }
-  );
+  // For a future-dated change, keep the outgoing contract ACTIVE and just cap
+  // its end_date, so the employee is not left without an active contract for
+  // the interim period. It naturally stops covering periods after the cutoff.
+  // For an immediate/past change, expire it now.
+  const changes = isFutureChange
+    ? { end_date: cutoff }
+    : { status: CONTRACT_STATUS.EXPIRED, end_date: cutoff };
+
+  await models.Contract.update(changes, {
+    where: {
+      employee_id: employeeId,
+      status: CONTRACT_STATUS.ACTIVE,
+      start_date: { [Op.lt]: newStartDate },
+      [Op.or]: [{ end_date: null }, { end_date: { [Op.gte]: newStartDate } }],
+    },
+    transaction,
+  });
 }
 
 module.exports = {

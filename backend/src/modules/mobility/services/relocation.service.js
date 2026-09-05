@@ -46,21 +46,56 @@ async function approve({ organizationId, id, approverUserId, note, budgetAmount,
   return row;
 }
 
+const RELO_TRANSITIONS = {
+  [RELOCATION_STATUS.REQUESTED]: [RELOCATION_STATUS.APPROVED, RELOCATION_STATUS.CANCELLED],
+  [RELOCATION_STATUS.APPROVED]: [RELOCATION_STATUS.IN_PROGRESS, RELOCATION_STATUS.CANCELLED],
+  [RELOCATION_STATUS.IN_PROGRESS]: [RELOCATION_STATUS.COMPLETED, RELOCATION_STATUS.CANCELLED],
+  [RELOCATION_STATUS.COMPLETED]: [],
+  [RELOCATION_STATUS.CANCELLED]: [],
+};
+
 async function transition({ organizationId, id, toStatus, actorUserId, actualMoveDate }) {
   const row = await models.RelocationCase.findOne({
     where: { id, organization_id: organizationId },
   });
   if (!row) throw AppError.notFound('Relocation case not found');
-  if ([RELOCATION_STATUS.COMPLETED, RELOCATION_STATUS.CANCELLED].includes(row.status)) {
-    throw AppError.conflict('Case is already in a terminal state');
+  const allowed = RELO_TRANSITIONS[row.status] || [];
+  if (!allowed.includes(toStatus)) {
+    throw AppError.conflict(`Cannot move a relocation from ${row.status} to ${toStatus}`);
   }
   row.status = toStatus;
+  if (toStatus === RELOCATION_STATUS.APPROVED) {
+    // Moving to approved via the dropdown records the approver and marks the
+    // budget approved, so the approval is not hollow.
+    row.approved_by = actorUserId || row.approved_by;
+    row.approved_at = row.approved_at || new Date();
+    if (row.budget_status === RELOCATION_BUDGET_STATUS.DRAFT) row.budget_status = RELOCATION_BUDGET_STATUS.APPROVED;
+  }
   if (toStatus === RELOCATION_STATUS.COMPLETED) {
     row.actual_move_date = actualMoveDate || new Date().toISOString().slice(0, 10);
     row.budget_status = RELOCATION_BUDGET_STATUS.CLOSED;
   }
   await row.save();
   return row;
+}
+
+// Recompute spent_amount from expenses that are actually approved/reimbursed.
+async function recomputeSpent(relocation, transaction) {
+  const expenses = await models.RelocationExpense.findAll({
+    where: { relocation_case_id: relocation.id, status: { [require('sequelize').Op.in]: ['approved', 'reimbursed'] } },
+    transaction,
+  });
+  const spent = expenses.reduce((sum, e) => money.add(sum, money.toNumber(e.amount)), 0);
+  relocation.spent_amount = spent;
+  if (relocation.budget_status !== RELOCATION_BUDGET_STATUS.CLOSED) {
+    relocation.budget_status =
+      relocation.budget_amount && spent >= money.toNumber(relocation.budget_amount)
+        ? RELOCATION_BUDGET_STATUS.EXHAUSTED
+        : relocation.budget_status === RELOCATION_BUDGET_STATUS.EXHAUSTED
+          ? RELOCATION_BUDGET_STATUS.APPROVED
+          : relocation.budget_status;
+  }
+  await relocation.save({ transaction });
 }
 
 async function recordExpense({ organizationId, id, payload }) {
@@ -74,6 +109,7 @@ async function recordExpense({ organizationId, id, payload }) {
       throw AppError.conflict('Cannot record expenses on a cancelled relocation');
     }
 
+    // Expenses start pending and do not count toward spend until reviewed.
     const expense = await models.RelocationExpense.create(
       {
         ...payload,
@@ -81,38 +117,36 @@ async function recordExpense({ organizationId, id, payload }) {
       },
       { transaction }
     );
-
-    const amount = money.toNumber(payload.amount);
-    relocation.spent_amount = money.add(money.toNumber(relocation.spent_amount || 0), amount);
-    if (
-      relocation.budget_amount &&
-      relocation.spent_amount >= money.toNumber(relocation.budget_amount) &&
-      relocation.budget_status !== RELOCATION_BUDGET_STATUS.CLOSED
-    ) {
-      relocation.budget_status = RELOCATION_BUDGET_STATUS.EXHAUSTED;
-    }
-    await relocation.save({ transaction });
-
     return expense;
   });
 }
 
-async function reviewExpense({ organizationId, expenseId, actorUserId, decision, note }) {
-  const expense = await models.RelocationExpense.findByPk(expenseId, {
-    include: [{ model: models.RelocationCase, as: 'relocation_case' }],
+async function reviewExpense({ organizationId, relocationId, expenseId, actorUserId, decision, note }) {
+  return sequelize.transaction(async (transaction) => {
+    const expense = await models.RelocationExpense.findByPk(expenseId, {
+      include: [{ model: models.RelocationCase, as: 'relocation_case' }],
+      transaction,
+    });
+    if (!expense || expense.relocation_case.organization_id !== organizationId) {
+      throw AppError.notFound('Expense not found');
+    }
+    if (relocationId && expense.relocation_case_id !== relocationId) {
+      throw AppError.notFound('Expense does not belong to this relocation');
+    }
+    if (!['approved', 'rejected', 'reimbursed'].includes(decision)) {
+      throw AppError.badRequest('Invalid decision');
+    }
+    expense.status = decision;
+    expense.reviewed_by = actorUserId;
+    expense.reviewed_at = new Date();
+    if (note) expense.note = note;
+    await expense.save({ transaction });
+
+    // Recompute spend from approved/reimbursed expenses so a rejection does not
+    // leave the budget inflated.
+    await recomputeSpent(expense.relocation_case, transaction);
+    return expense;
   });
-  if (!expense || expense.relocation_case.organization_id !== organizationId) {
-    throw AppError.notFound('Expense not found');
-  }
-  if (!['approved', 'rejected', 'reimbursed'].includes(decision)) {
-    throw AppError.badRequest('Invalid decision');
-  }
-  expense.status = decision;
-  expense.reviewed_by = actorUserId;
-  expense.reviewed_at = new Date();
-  if (note) expense.note = note;
-  await expense.save();
-  return expense;
 }
 
 module.exports = { request, approve, transition, recordExpense, reviewExpense };

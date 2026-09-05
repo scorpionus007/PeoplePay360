@@ -43,6 +43,8 @@ async function remove(req, res) {
     where: { id: req.params.id, organization_id: req.user.organizationId },
   });
   if (!row) throw AppError.notFound('Provider not found');
+  const planCount = await models.BenefitPlan.count({ where: { provider_id: row.id } });
+  if (planCount > 0) throw AppError.conflict('Cannot delete a provider that still has plans; reassign or remove them first');
   await row.destroy();
   return noContent(res);
 }

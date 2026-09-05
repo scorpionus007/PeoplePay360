@@ -16,6 +16,27 @@ const {
 const contractService = require('./contract.service');
 const { computePayslipBreakdown } = require('./payrollComputation.service');
 
+// Convert a contract wage to a monthly-equivalent basic based on its wage
+// period, so a yearly/weekly/daily/hourly contract is not paid its raw amount
+// as a single month. Uses standard annualization (2080 work hours, 260 work
+// days, 52 weeks per year) divided into 12 months.
+function monthlyBasicFromContract(contract) {
+  const amount = money.toNumber(contract?.wage_amount);
+  switch (contract?.wage_period) {
+    case 'yearly':
+      return money.divide(amount, 12);
+    case 'weekly':
+      return money.divide(money.multiply(amount, 52), 12);
+    case 'daily':
+      return money.divide(money.multiply(amount, 260), 12);
+    case 'hourly':
+      return money.divide(money.multiply(amount, 2080), 12);
+    case 'monthly':
+    default:
+      return amount;
+  }
+}
+
 async function listEligibleEmployees({ organizationId, periodStart, periodEnd, departmentIds, employeeTypes }) {
   const where = {
     organization_id: organizationId,
@@ -112,9 +133,10 @@ async function createPayrun({
   });
 }
 
-async function computePayrun(payrunId) {
+async function computePayrun(payrunId, organizationId) {
   return sequelize.transaction(async (transaction) => {
-    const payrun = await models.Payrun.findByPk(payrunId, {
+    const payrun = await models.Payrun.findOne({
+      where: { id: payrunId, ...(organizationId ? { organization_id: organizationId } : {}) },
       include: [{ model: models.SalaryStructure, as: 'salary_structure' }],
       transaction,
     });
@@ -199,7 +221,17 @@ async function computePayrun(payrunId) {
         workedDays: null,
         workedHours: null,
         extras,
+        periodBasic: monthlyBasicFromContract(contract),
       });
+
+      // Net available before any advance recovery; recovery is capped to this
+      // so a large outstanding advance cannot drive net negative and block the
+      // whole payrun. The unrecovered remainder is carried to the next run.
+      const preRecoveryNet = money.subtract(
+        breakdown.totals.gross,
+        money.add(breakdown.totals.deductions, breakdown.totals.tax, breakdown.totals.contributions)
+      );
+      let availableForRecovery = Math.max(0, preRecoveryNet);
 
       // Advance salary recovery: settle outstanding for this employee.
       const advances = await models.AdvanceSalaryRequest.findAll({
@@ -221,7 +253,10 @@ async function computePayrun(payrunId) {
           installment = money.divide(money.toNumber(adv.approved_amount || adv.requested_amount), months);
           installment = Math.min(installment, money.toNumber(adv.outstanding_amount));
         }
+        // Never recover more than the remaining net available this period.
+        installment = Math.min(installment, availableForRecovery);
         if (installment > 0) {
+          availableForRecovery = money.subtract(availableForRecovery, installment);
           recoveryTotal = money.add(recoveryTotal, installment);
           breakdown.lines.push({
             salary_rule_id: null,
@@ -297,6 +332,7 @@ async function computePayrun(payrunId) {
           period_start: payslip.period_start,
           period_end: payslip.period_end,
           id: { [Op.ne]: payslip.id },
+          status: { [Op.ne]: PAYSLIP_STATUS.CANCELLED },
         },
         transaction,
       });
@@ -320,13 +356,17 @@ async function computePayrun(payrunId) {
   });
 }
 
-async function validatePayrun({ id, validatedBy }) {
-  const payrun = await models.Payrun.findByPk(id);
+async function validatePayrun({ id, validatedBy, organizationId }) {
+  const payrun = await models.Payrun.findOne({
+    where: { id, ...(organizationId ? { organization_id: organizationId } : {}) },
+  });
   if (!payrun) throw AppError.notFound('Payrun not found');
   if (payrun.status !== PAYRUN_STATUS.COMPUTED) {
     throw AppError.conflict('Only computed payruns can be validated');
   }
-  const blocking = (payrun.warnings || []).filter((w) => w.code === 'NO_ACTIVE_CONTRACT' || w.code === 'NON_POSITIVE_NET');
+  const blocking = (payrun.warnings || []).filter(
+    (w) => w.code === 'NO_ACTIVE_CONTRACT' || w.code === 'NON_POSITIVE_NET' || w.code === 'DUPLICATE_PAYSLIP'
+  );
   if (blocking.length) {
     throw AppError.unprocessable('Payrun has blocking warnings', { warnings: blocking });
   }
@@ -341,9 +381,12 @@ async function validatePayrun({ id, validatedBy }) {
   return payrun;
 }
 
-async function markPaid({ id, releasedBy }) {
+async function markPaid({ id, releasedBy, organizationId }) {
   return sequelize.transaction(async (transaction) => {
-    const payrun = await models.Payrun.findByPk(id, { transaction });
+    const payrun = await models.Payrun.findOne({
+      where: { id, ...(organizationId ? { organization_id: organizationId } : {}) },
+      transaction,
+    });
     if (!payrun) throw AppError.notFound('Payrun not found');
     if (payrun.status !== PAYRUN_STATUS.VALIDATED) {
       throw AppError.conflict('Only validated payruns can be marked as paid');
@@ -356,6 +399,24 @@ async function markPaid({ id, releasedBy }) {
       payslip.status = PAYSLIP_STATUS.PAID;
       payslip.paid_at = now;
       await payslip.save({ transaction });
+
+      // Mark bonuses that fed this payslip as paid so they are not re-added to
+      // a later payrun or on recompute of a different run.
+      await models.BonusRecord.update(
+        { status: 'paid', payslip_id: payslip.id, payout_period: payrun.period_end },
+        {
+          where: {
+            organization_id: payslip.organization_id,
+            employee_id: payslip.employee_id,
+            status: 'approved',
+            [Op.or]: [
+              { payout_period: { [Op.between]: [payrun.period_start, payrun.period_end] } },
+              { grant_date: { [Op.between]: [payrun.period_start, payrun.period_end] } },
+            ],
+          },
+          transaction,
+        }
+      );
 
       await models.PayrollTransaction.create(
         {

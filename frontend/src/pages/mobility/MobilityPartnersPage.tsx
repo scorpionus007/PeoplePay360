@@ -26,8 +26,21 @@ export function MobilityPartnersPage() {
 
   const save = async () => {
     try {
-      const payload: any = { ...form };
-      if (form.rating) payload.rating = Number(form.rating);
+      // Send blank optionals as null (not '') so the validators accept them.
+      const payload: any = {
+        name: form.name,
+        category: form.category,
+        country_code: form.country_code || null,
+        city: form.city || null,
+        contact_name: form.contact_name || null,
+        contact_email: form.contact_email || null,
+        contact_phone: form.contact_phone || null,
+        website: form.website || null,
+        contract_reference: form.contract_reference || null,
+        contract_end_date: form.contract_end_date || null,
+        rating: form.rating ? Number(form.rating) : null,
+        notes: form.notes || null,
+      };
       await api.post('/mobility/partners', payload);
       toast.success('Partner added');
       setOpenForm(false);

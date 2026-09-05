@@ -32,7 +32,7 @@ export function BenefitEnrollmentsPage() {
 
   const create = async () => {
     try {
-      await api.post('/benefits/enrollments', form);
+      await api.post('/benefits/enrollments', { ...form, employee_id: form.employee_id || null });
       toast.success('Enrollment created');
       setOpenForm(false);
       refetch();

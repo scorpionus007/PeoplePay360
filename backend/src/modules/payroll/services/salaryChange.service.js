@@ -10,7 +10,7 @@ async function suggest({ organizationId, employeeId, changeType, amount, percent
   if (!amount && !percent) throw AppError.badRequest('Either amount or percent must be provided');
 
   const currentContract = await models.Contract.findOne({
-    where: { employee_id: employeeId, status: CONTRACT_STATUS.ACTIVE },
+    where: { employee_id: employeeId, organization_id: organizationId, status: CONTRACT_STATUS.ACTIVE },
     order: [['start_date', 'DESC']],
   });
 
@@ -28,13 +28,15 @@ async function suggest({ organizationId, employeeId, changeType, amount, percent
   });
 }
 
-async function payrollDecide({ id, payrollReviewerId, decidedAmount, note }) {
-  const request = await models.SalaryChangeRequest.findByPk(id);
+async function payrollDecide({ id, organizationId, payrollReviewerId, decidedAmount, note }) {
+  const request = await models.SalaryChangeRequest.findOne({ where: { id, organization_id: organizationId } });
   if (!request) throw AppError.notFound('Salary change request not found');
   if (request.status !== CHANGE_REQUEST_STATUS.PENDING_PAYROLL_REVIEW) {
     throw AppError.conflict('Only pending payroll reviews can be decided');
   }
-  if (!decidedAmount) throw AppError.badRequest('Payroll must provide a decided amount');
+  if (!decidedAmount || money.toNumber(decidedAmount) <= 0) {
+    throw AppError.badRequest('Payroll must provide a positive decided amount (the new absolute wage)');
+  }
 
   request.payroll_reviewer_id = payrollReviewerId;
   request.payroll_decided_amount = decidedAmount;
@@ -45,11 +47,16 @@ async function payrollDecide({ id, payrollReviewerId, decidedAmount, note }) {
   return request;
 }
 
-async function adminApprove({ id, adminReviewerId, note }) {
-  const request = await models.SalaryChangeRequest.findByPk(id);
+async function adminApprove({ id, organizationId, adminReviewerId, note }) {
+  const request = await models.SalaryChangeRequest.findOne({ where: { id, organization_id: organizationId } });
   if (!request) throw AppError.notFound('Salary change request not found');
   if (request.status !== CHANGE_REQUEST_STATUS.PENDING_ADMIN_APPROVAL) {
     throw AppError.conflict('Request is not awaiting admin approval');
+  }
+  // Segregation of duties: the admin approver must differ from the payroll
+  // reviewer who decided the amount.
+  if (adminReviewerId && request.payroll_reviewer_id && adminReviewerId === request.payroll_reviewer_id) {
+    throw AppError.forbidden('The admin approver must be a different person from the payroll reviewer');
   }
   request.admin_reviewer_id = adminReviewerId;
   request.admin_decision_note = note || null;
@@ -59,8 +66,8 @@ async function adminApprove({ id, adminReviewerId, note }) {
   return request;
 }
 
-async function reject({ id, adminReviewerId, note }) {
-  const request = await models.SalaryChangeRequest.findByPk(id);
+async function reject({ id, organizationId, adminReviewerId, note }) {
+  const request = await models.SalaryChangeRequest.findOne({ where: { id, organization_id: organizationId } });
   if (!request) throw AppError.notFound('Salary change request not found');
   if (![CHANGE_REQUEST_STATUS.PENDING_ADMIN_APPROVAL, CHANGE_REQUEST_STATUS.PENDING_PAYROLL_REVIEW].includes(
     request.status
@@ -75,18 +82,18 @@ async function reject({ id, adminReviewerId, note }) {
   return request;
 }
 
-async function apply({ id, actorUserId }) {
+async function apply({ id, organizationId, actorUserId }) {
   return sequelize.transaction(async (transaction) => {
-    const request = await models.SalaryChangeRequest.findByPk(id, { transaction });
+    const request = await models.SalaryChangeRequest.findOne({ where: { id, organization_id: organizationId }, transaction });
     if (!request) throw AppError.notFound('Salary change request not found');
     if (request.status !== CHANGE_REQUEST_STATUS.APPROVED) {
       throw AppError.conflict('Only approved requests can be applied');
     }
 
     const current = request.current_contract_id
-      ? await models.Contract.findByPk(request.current_contract_id, { transaction })
+      ? await models.Contract.findOne({ where: { id: request.current_contract_id, organization_id: organizationId }, transaction })
       : await models.Contract.findOne({
-          where: { employee_id: request.employee_id, status: CONTRACT_STATUS.ACTIVE },
+          where: { employee_id: request.employee_id, organization_id: organizationId, status: CONTRACT_STATUS.ACTIVE },
           order: [['start_date', 'DESC']],
           transaction,
         });

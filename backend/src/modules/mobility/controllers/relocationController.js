@@ -78,6 +78,7 @@ async function addExpense(req, res) {
 async function reviewExpense(req, res) {
   const row = await relocation.reviewExpense({
     organizationId: req.user.organizationId,
+    relocationId: req.params.id,
     expenseId: req.params.expenseId,
     actorUserId: req.user.id,
     decision: req.body.decision,
