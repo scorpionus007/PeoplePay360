@@ -1,0 +1,118 @@
+'use strict';
+
+const { models, sequelize } = require('../../models');
+const { ROLES, PERMISSIONS } = require('../../config/constants');
+const logger = require('../../config/logger');
+
+const ROLE_DEFINITIONS = [
+  { key: ROLES.ADMIN, name: 'Administrator', description: 'Full access across every module' },
+  { key: ROLES.HR_MANAGER, name: 'HR Manager', description: 'Chief HR, reads all modules, suggests changes to owners' },
+  { key: ROLES.HR, name: 'HR', description: 'Department scoped HR operations' },
+  { key: ROLES.PAYROLL_MANAGER, name: 'Payroll Manager', description: 'CRUD over payroll data and structures' },
+  { key: ROLES.PAYROLL_USER, name: 'Payroll User', description: 'Reads payroll data and releases funds' },
+  { key: ROLES.IT_ADMIN, name: 'IT Administrator', description: 'Owns IT administration and device fleet' },
+  {
+    key: ROLES.TALENT_ACQUISITION_LEAD,
+    name: 'Talent Acquisition Lead',
+    description: 'Owns the hiring module across the organization',
+  },
+  { key: ROLES.EMPLOYEE, name: 'Employee', description: 'Employee self service surface' },
+];
+
+const ROLE_PERMISSIONS = {
+  [ROLES.HR_MANAGER]: [
+    PERMISSIONS.EMPLOYEE_READ,
+    PERMISSIONS.DEPARTMENT_READ,
+    PERMISSIONS.PAYROLL_READ,
+    PERMISSIONS.PAYROLL_STRUCTURE_READ,
+    PERMISSIONS.PAYROLL_RULE_READ,
+    PERMISSIONS.CONTRACT_READ,
+    PERMISSIONS.PAYRUN_READ,
+    PERMISSIONS.PAYSLIP_READ,
+    PERMISSIONS.SALARY_CHANGE_SUGGEST,
+  ],
+  [ROLES.HR]: [
+    PERMISSIONS.EMPLOYEE_READ,
+    PERMISSIONS.EMPLOYEE_WRITE,
+    PERMISSIONS.DEPARTMENT_READ,
+    PERMISSIONS.CONTRACT_READ,
+    PERMISSIONS.SALARY_CHANGE_SUGGEST,
+  ],
+  [ROLES.PAYROLL_MANAGER]: [
+    PERMISSIONS.EMPLOYEE_READ,
+    PERMISSIONS.DEPARTMENT_READ,
+    PERMISSIONS.PAYROLL_READ,
+    PERMISSIONS.PAYROLL_WRITE,
+    PERMISSIONS.PAYROLL_STRUCTURE_READ,
+    PERMISSIONS.PAYROLL_STRUCTURE_WRITE,
+    PERMISSIONS.PAYROLL_RULE_READ,
+    PERMISSIONS.PAYROLL_RULE_WRITE,
+    PERMISSIONS.CONTRACT_READ,
+    PERMISSIONS.CONTRACT_WRITE,
+    PERMISSIONS.PAYRUN_READ,
+    PERMISSIONS.PAYRUN_WRITE,
+    PERMISSIONS.PAYRUN_VALIDATE,
+    PERMISSIONS.PAYSLIP_READ,
+    PERMISSIONS.PAYSLIP_WRITE,
+    PERMISSIONS.SALARY_CHANGE_DECIDE,
+    PERMISSIONS.ADVANCE_SALARY_APPROVE,
+    PERMISSIONS.BONUS_MANAGE,
+  ],
+  [ROLES.PAYROLL_USER]: [
+    PERMISSIONS.PAYROLL_READ,
+    PERMISSIONS.PAYROLL_STRUCTURE_READ,
+    PERMISSIONS.PAYROLL_RULE_READ,
+    PERMISSIONS.CONTRACT_READ,
+    PERMISSIONS.PAYRUN_READ,
+    PERMISSIONS.PAYRUN_WRITE,
+    PERMISSIONS.PAYSLIP_READ,
+    PERMISSIONS.PAYSLIP_WRITE,
+    PERMISSIONS.PAYMENT_RELEASE,
+  ],
+  [ROLES.IT_ADMIN]: [PERMISSIONS.EMPLOYEE_READ, PERMISSIONS.DEPARTMENT_READ],
+  [ROLES.TALENT_ACQUISITION_LEAD]: [PERMISSIONS.EMPLOYEE_READ, PERMISSIONS.DEPARTMENT_READ],
+  [ROLES.EMPLOYEE]: [PERMISSIONS.ADVANCE_SALARY_REQUEST],
+};
+
+async function seed() {
+  await sequelize.transaction(async (transaction) => {
+    for (const role of ROLE_DEFINITIONS) {
+      await models.Role.findOrCreate({
+        where: { key: role.key },
+        defaults: { ...role, is_system: true },
+        transaction,
+      });
+    }
+
+    for (const key of Object.values(PERMISSIONS)) {
+      await models.Permission.findOrCreate({
+        where: { key },
+        defaults: { key, description: key },
+        transaction,
+      });
+    }
+
+    const allRoles = await models.Role.findAll({ transaction });
+    const allPermissions = await models.Permission.findAll({ transaction });
+    const permByKey = Object.fromEntries(allPermissions.map((p) => [p.key, p]));
+
+    for (const role of allRoles) {
+      const wantedKeys = ROLE_PERMISSIONS[role.key] || [];
+      const wantedPerms = wantedKeys.map((k) => permByKey[k]).filter(Boolean);
+      await role.setPermissions(wantedPerms, { transaction });
+    }
+  });
+
+  logger.info('Roles and permissions seeded');
+}
+
+module.exports = { seed };
+
+if (require.main === module) {
+  seed()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      logger.error(err);
+      process.exit(1);
+    });
+}
