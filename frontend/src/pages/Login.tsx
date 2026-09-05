@@ -13,7 +13,7 @@ export function LoginPage() {
     <div className="pp-login">
       <div className="pp-login__left">
         <Link to="/" className="pp-login__brand" aria-label="Back to peoplepay">
-          <Logo size={24} />
+          <Logo size={32} />
         </Link>
         <div className="pp-login__card">
           <h1 className="pp-login__title">Welcome back</h1>
@@ -23,7 +23,7 @@ export function LoginPage() {
       </div>
       <div className="pp-login__right" aria-hidden="true">
         <div className="pp-login__pitch">
-          <div className="pp-login__pitch-eyebrow">HR &middot; Payroll &middot; IT &middot; Benefits &middot; Hiring &middot; Mobility</div>
+          <div className="pp-login__pitch-eyebrow">hr · payroll · it · benefits · hiring · mobility</div>
           <div className="pp-login__pitch-title">One platform for every person operation.</div>
           <div className="pp-login__pitch-body">
             Run global payroll, orchestrate hiring, ship devices, manage benefits and mobility, and keep every module in sync.

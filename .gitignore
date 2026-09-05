@@ -54,3 +54,6 @@ coverage/
 
 # Local overrides
 *.local
+
+# Temporary local technical audit (never commit / push)
+TEMP_TECHNICAL_DETAILS.md

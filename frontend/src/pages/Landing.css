@@ -1,6 +1,7 @@
 html.pp-landing-scroll {
-  scroll-behavior: smooth;
   scroll-padding-top: 96px;
+  overflow-x: clip;
+  overscroll-behavior-y: none;
 }
 
 html.pp-landing-scroll,
@@ -11,6 +12,9 @@ html.pp-landing-scroll #root {
 }
 
 .pp-landing {
+  --pp-copy-size: clamp(1.15rem, 2.1vw, 1.55rem);
+  --pp-copy-leading: 1.65;
+  --pp-copy-tracking: -0.02em;
   background: #fff;
   color: #000;
 }
@@ -33,7 +37,7 @@ html.pp-landing-scroll #root {
 .pp-landing__nav--light {
   color: #000;
   background: #fff;
-  border-bottom: 1px solid #000;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), 0 10px 28px rgba(0, 0, 0, 0.06);
 }
 
 .pp-landing__links {
@@ -109,9 +113,19 @@ html.pp-landing-scroll #root {
 }
 
 .pp-landing__mark.pp-logo {
+  position: relative;
+  z-index: 2;
+  top: -10vh;
   font-size: clamp(2.4rem, 8.4vw, 8.25rem) !important;
   color: #fff;
   animation: pp-landing-mark 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pp-landing__hero-crowd {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .pp-landing__panel {
@@ -180,10 +194,6 @@ html.pp-landing-scroll #root {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html.pp-landing-scroll {
-    scroll-behavior: auto;
-  }
-
   .pp-landing__mark.pp-logo,
   .pp-landing__nav {
     animation: none;
