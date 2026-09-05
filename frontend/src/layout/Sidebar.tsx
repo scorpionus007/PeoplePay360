@@ -109,7 +109,7 @@ const NAV: Group[] = [
       { to: '/mobility/partners', label: 'Partners', icon: Handshake, anyPerm: ['mobility.partner.read'] },
       { to: '/mobility/visas', label: 'Visas', icon: Plane, anyPerm: ['visa.read'] },
       { to: '/mobility/relocations', label: 'Relocations', icon: Home, anyPerm: ['relocation.read'] },
-      { to: '/mobility/immigration', label: 'Immigration Cases', icon: ClipboardList, anyPerm: ['immigration.case.read'] },
+      { to: '/mobility/immigration', label: 'Immigration Cases', icon: ClipboardList, anyPerm: ['immigration.read'] },
       { to: '/mobility/travel', label: 'Travel', icon: Plane, anyPerm: ['travel.read'] },
     ],
   },
