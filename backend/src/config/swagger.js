@@ -54,6 +54,14 @@ const options = {
       { name: 'IT: EDR', description: 'EDR integrations and events' },
       { name: 'IT: Onboarding', description: 'Onboarding kits and provisioning' },
       { name: 'IT: Dashboard', description: 'IT KPI dashboard' },
+      { name: 'Benefits: Providers', description: 'External benefit carriers and vendors' },
+      { name: 'Benefits: Plans', description: 'Benefit plans offered to employees' },
+      { name: 'Benefits: Enrollments', description: 'Employee enrollments and dependents' },
+      { name: 'Benefits: Claims', description: 'Reimbursement and support claims' },
+      { name: 'Benefits: Loans', description: 'Loan programs, applications, repayments' },
+      { name: 'Benefits: Vouchers', description: 'Gift vouchers issue, deliver, redeem' },
+      { name: 'Benefits: Discount Partners', description: 'External tie ups and discounts' },
+      { name: 'Benefits: Dashboard', description: 'Benefits KPI dashboard' },
     ],
     components: {
       securitySchemes: {

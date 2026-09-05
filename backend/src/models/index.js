@@ -28,6 +28,18 @@ const HRRequest = require('../modules/hr/models/HRRequest')(sequelize);
 const HRRequestMessage = require('../modules/hr/models/HRRequestMessage')(sequelize);
 const HRAnnouncement = require('../modules/hr/models/HRAnnouncement')(sequelize);
 
+// Benefits module models
+const BenefitProvider = require('../modules/benefits/models/BenefitProvider')(sequelize);
+const BenefitPlan = require('../modules/benefits/models/BenefitPlan')(sequelize);
+const BenefitEnrollment = require('../modules/benefits/models/BenefitEnrollment')(sequelize);
+const BenefitDependent = require('../modules/benefits/models/BenefitDependent')(sequelize);
+const BenefitClaim = require('../modules/benefits/models/BenefitClaim')(sequelize);
+const LoanProgram = require('../modules/benefits/models/LoanProgram')(sequelize);
+const Loan = require('../modules/benefits/models/Loan')(sequelize);
+const LoanRepayment = require('../modules/benefits/models/LoanRepayment')(sequelize);
+const GiftVoucher = require('../modules/benefits/models/GiftVoucher')(sequelize);
+const DiscountPartner = require('../modules/benefits/models/DiscountPartner')(sequelize);
+
 // IT Administration module models
 const Device = require('../modules/itAdmin/models/Device')(sequelize);
 const DeviceAssignment = require('../modules/itAdmin/models/DeviceAssignment')(sequelize);
@@ -79,6 +91,16 @@ const models = {
   HRRequest,
   HRRequestMessage,
   HRAnnouncement,
+  BenefitProvider,
+  BenefitPlan,
+  BenefitEnrollment,
+  BenefitDependent,
+  BenefitClaim,
+  LoanProgram,
+  Loan,
+  LoanRepayment,
+  GiftVoucher,
+  DiscountPartner,
   Device,
   DeviceAssignment,
   SoftwareCatalogItem,

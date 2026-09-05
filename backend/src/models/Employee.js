@@ -99,6 +99,21 @@ module.exports = (sequelize) => {
     if (models.FeedbackEntry) {
       Employee.hasMany(models.FeedbackEntry, { as: 'feedback_entries', foreignKey: 'employee_id' });
     }
+    if (models.BenefitEnrollment) {
+      Employee.hasMany(models.BenefitEnrollment, {
+        as: 'benefit_enrollments',
+        foreignKey: 'employee_id',
+      });
+    }
+    if (models.BenefitClaim) {
+      Employee.hasMany(models.BenefitClaim, { as: 'benefit_claims', foreignKey: 'employee_id' });
+    }
+    if (models.Loan) {
+      Employee.hasMany(models.Loan, { as: 'loans', foreignKey: 'employee_id' });
+    }
+    if (models.GiftVoucher) {
+      Employee.hasMany(models.GiftVoucher, { as: 'gift_vouchers', foreignKey: 'employee_id' });
+    }
   };
 
   Employee.prototype.fullName = function fullName() {

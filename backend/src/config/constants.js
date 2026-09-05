@@ -84,6 +84,28 @@ const PERMISSIONS = Object.freeze({
   IT_ONBOARDING_WRITE: 'it.onboarding.write',
   IT_LEASE_READ: 'it.lease.read',
   IT_LEASE_WRITE: 'it.lease.write',
+
+  // Benefits
+  BENEFIT_PROVIDER_READ: 'benefit.provider.read',
+  BENEFIT_PROVIDER_WRITE: 'benefit.provider.write',
+  BENEFIT_PLAN_READ: 'benefit.plan.read',
+  BENEFIT_PLAN_WRITE: 'benefit.plan.write',
+  BENEFIT_ENROLLMENT_READ: 'benefit.enrollment.read',
+  BENEFIT_ENROLLMENT_WRITE: 'benefit.enrollment.write',
+  BENEFIT_ENROLLMENT_APPROVE: 'benefit.enrollment.approve',
+  BENEFIT_CLAIM_READ: 'benefit.claim.read',
+  BENEFIT_CLAIM_WRITE: 'benefit.claim.write',
+  BENEFIT_CLAIM_APPROVE: 'benefit.claim.approve',
+  LOAN_PROGRAM_READ: 'loan.program.read',
+  LOAN_PROGRAM_WRITE: 'loan.program.write',
+  LOAN_REQUEST_READ: 'loan.request.read',
+  LOAN_REQUEST_WRITE: 'loan.request.write',
+  LOAN_APPROVE: 'loan.approve',
+  LOAN_DISBURSE: 'loan.disburse',
+  VOUCHER_READ: 'voucher.read',
+  VOUCHER_WRITE: 'voucher.write',
+  DISCOUNT_PARTNER_READ: 'discount.partner.read',
+  DISCOUNT_PARTNER_WRITE: 'discount.partner.write',
 });
 
 const EMPLOYMENT_STATUS = Object.freeze({
@@ -259,6 +281,88 @@ const HR_REQUEST_STATUS = Object.freeze({
   CANCELLED: 'cancelled',
 });
 
+const BENEFIT_CATEGORY = Object.freeze({
+  HEALTH_INSURANCE: 'health_insurance',
+  DENTAL_INSURANCE: 'dental_insurance',
+  VISION_INSURANCE: 'vision_insurance',
+  LIFE_INSURANCE: 'life_insurance',
+  DISABILITY_INSURANCE: 'disability_insurance',
+  MATERNITY: 'maternity',
+  PATERNITY: 'paternity',
+  LEGAL_SUPPORT: 'legal_support',
+  WELLNESS: 'wellness',
+  MENTAL_HEALTH: 'mental_health',
+  TRANSPORTATION: 'transportation',
+  MEALS: 'meals',
+  GIFT_VOUCHER: 'gift_voucher',
+  SHOPPING_DISCOUNT: 'shopping_discount',
+  RETIREMENT: 'retirement',
+  LOAN: 'loan',
+  LEARNING: 'learning',
+  RELOCATION: 'relocation',
+  CHILDCARE: 'childcare',
+  OTHER: 'other',
+});
+
+const BENEFIT_PLAN_STATUS = Object.freeze({
+  DRAFT: 'draft',
+  ACTIVE: 'active',
+  PAUSED: 'paused',
+  ARCHIVED: 'archived',
+});
+
+const BENEFIT_ENROLLMENT_STATUS = Object.freeze({
+  PENDING_APPROVAL: 'pending_approval',
+  ACTIVE: 'active',
+  WAIVED: 'waived',
+  TERMINATED: 'terminated',
+  DECLINED: 'declined',
+});
+
+const BENEFIT_CLAIM_STATUS = Object.freeze({
+  SUBMITTED: 'submitted',
+  UNDER_REVIEW: 'under_review',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+  REIMBURSED: 'reimbursed',
+  CANCELLED: 'cancelled',
+});
+
+const DEPENDENT_RELATION = Object.freeze({
+  SPOUSE: 'spouse',
+  CHILD: 'child',
+  PARENT: 'parent',
+  SIBLING: 'sibling',
+  DOMESTIC_PARTNER: 'domestic_partner',
+  OTHER: 'other',
+});
+
+const LOAN_STATUS = Object.freeze({
+  DRAFT: 'draft',
+  SUBMITTED: 'submitted',
+  UNDER_REVIEW: 'under_review',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+  DISBURSED: 'disbursed',
+  REPAYING: 'repaying',
+  CLOSED: 'closed',
+  CANCELLED: 'cancelled',
+});
+
+const LOAN_INTEREST_MODE = Object.freeze({
+  ZERO: 'zero',
+  FLAT: 'flat',
+  REDUCING_BALANCE: 'reducing_balance',
+});
+
+const VOUCHER_STATUS = Object.freeze({
+  ISSUED: 'issued',
+  DELIVERED: 'delivered',
+  REDEEMED: 'redeemed',
+  EXPIRED: 'expired',
+  CANCELLED: 'cancelled',
+});
+
 const DEVICE_STATUS = Object.freeze({
   IN_STOCK: 'in_stock',
   ASSIGNED: 'assigned',
@@ -402,4 +506,12 @@ module.exports = {
   ONBOARDING_PROVISION_STATUS,
   SOFTWARE_LICENSE_TYPE,
   DEVICE_SOFTWARE_STATUS,
+  BENEFIT_CATEGORY,
+  BENEFIT_PLAN_STATUS,
+  BENEFIT_ENROLLMENT_STATUS,
+  BENEFIT_CLAIM_STATUS,
+  DEPENDENT_RELATION,
+  LOAN_STATUS,
+  LOAN_INTEREST_MODE,
+  VOUCHER_STATUS,
 };
