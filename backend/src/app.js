@@ -14,6 +14,7 @@ const logger = require('./config/logger');
 const { globalLimiter } = require('./middleware/rateLimit');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const rootRouter = require('./routes');
+const swagger = require('./config/swagger');
 
 function createApp() {
   const app = express();
@@ -43,6 +44,8 @@ function createApp() {
       stream: { write: (msg) => logger.info(msg.trim()) },
     })
   );
+
+  swagger.mount(app);
 
   app.use('/api/v1', globalLimiter, rootRouter);
 

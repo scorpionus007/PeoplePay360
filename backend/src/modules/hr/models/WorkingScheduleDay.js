@@ -22,8 +22,12 @@ module.exports = (sequelize) => {
     {
       tableName: 'working_schedule_days',
       indexes: [
-        { fields: ['working_schedule_id'] },
-        { fields: ['working_schedule_id', 'day_of_week', 'block_index'], unique: true },
+        { fields: ['working_schedule_id'], name: 'ws_days_schedule_idx' },
+        {
+          fields: ['working_schedule_id', 'day_of_week', 'block_index'],
+          unique: true,
+          name: 'ws_days_schedule_dow_block_uidx',
+        },
       ],
     }
   );

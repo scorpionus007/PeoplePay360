@@ -28,6 +28,18 @@ const HRRequest = require('../modules/hr/models/HRRequest')(sequelize);
 const HRRequestMessage = require('../modules/hr/models/HRRequestMessage')(sequelize);
 const HRAnnouncement = require('../modules/hr/models/HRAnnouncement')(sequelize);
 
+// IT Administration module models
+const Device = require('../modules/itAdmin/models/Device')(sequelize);
+const DeviceAssignment = require('../modules/itAdmin/models/DeviceAssignment')(sequelize);
+const SoftwareCatalogItem = require('../modules/itAdmin/models/SoftwareCatalogItem')(sequelize);
+const DeviceSoftware = require('../modules/itAdmin/models/DeviceSoftware')(sequelize);
+const BaselineControl = require('../modules/itAdmin/models/BaselineControl')(sequelize);
+const DeviceBaselineCheck = require('../modules/itAdmin/models/DeviceBaselineCheck')(sequelize);
+const EdrIntegration = require('../modules/itAdmin/models/EdrIntegration')(sequelize);
+const EdrEvent = require('../modules/itAdmin/models/EdrEvent')(sequelize);
+const OnboardingKit = require('../modules/itAdmin/models/OnboardingKit')(sequelize);
+const OnboardingProvision = require('../modules/itAdmin/models/OnboardingProvision')(sequelize);
+
 // Payroll module models
 const SalaryStructure = require('../modules/payroll/models/SalaryStructure')(sequelize);
 const SalaryRule = require('../modules/payroll/models/SalaryRule')(sequelize);
@@ -67,6 +79,16 @@ const models = {
   HRRequest,
   HRRequestMessage,
   HRAnnouncement,
+  Device,
+  DeviceAssignment,
+  SoftwareCatalogItem,
+  DeviceSoftware,
+  BaselineControl,
+  DeviceBaselineCheck,
+  EdrIntegration,
+  EdrEvent,
+  OnboardingKit,
+  OnboardingProvision,
   SalaryStructure,
   SalaryRule,
   SalaryStructureRule,

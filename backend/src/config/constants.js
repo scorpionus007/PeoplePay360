@@ -69,6 +69,21 @@ const PERMISSIONS = Object.freeze({
   HR_REQUEST_WRITE: 'hr.request.write',
   HR_CHAT_READ: 'hr.chat.read',
   HR_CHAT_WRITE: 'hr.chat.write',
+
+  // IT Administration
+  IT_DEVICE_READ: 'it.device.read',
+  IT_DEVICE_WRITE: 'it.device.write',
+  IT_DEVICE_ASSIGN: 'it.device.assign',
+  IT_SOFTWARE_READ: 'it.software.read',
+  IT_SOFTWARE_WRITE: 'it.software.write',
+  IT_BASELINE_READ: 'it.baseline.read',
+  IT_BASELINE_WRITE: 'it.baseline.write',
+  IT_EDR_READ: 'it.edr.read',
+  IT_EDR_WRITE: 'it.edr.write',
+  IT_ONBOARDING_READ: 'it.onboarding.read',
+  IT_ONBOARDING_WRITE: 'it.onboarding.write',
+  IT_LEASE_READ: 'it.lease.read',
+  IT_LEASE_WRITE: 'it.lease.write',
 });
 
 const EMPLOYMENT_STATUS = Object.freeze({
@@ -244,6 +259,105 @@ const HR_REQUEST_STATUS = Object.freeze({
   CANCELLED: 'cancelled',
 });
 
+const DEVICE_STATUS = Object.freeze({
+  IN_STOCK: 'in_stock',
+  ASSIGNED: 'assigned',
+  IN_REPAIR: 'in_repair',
+  RETIRED: 'retired',
+  LOST: 'lost',
+  QUARANTINED: 'quarantined',
+});
+
+const DEVICE_OWNERSHIP = Object.freeze({
+  OWNED: 'owned',
+  LEASED: 'leased',
+  BYOD: 'byod',
+});
+
+const DEVICE_CATEGORY = Object.freeze({
+  LAPTOP: 'laptop',
+  DESKTOP: 'desktop',
+  MOBILE: 'mobile',
+  TABLET: 'tablet',
+  MONITOR: 'monitor',
+  ACCESSORY: 'accessory',
+  SERVER: 'server',
+});
+
+const OS_FAMILY = Object.freeze({
+  WINDOWS: 'windows',
+  MACOS: 'macos',
+  LINUX: 'linux',
+  IOS: 'ios',
+  ANDROID: 'android',
+  CHROMEOS: 'chromeos',
+  OTHER: 'other',
+});
+
+const BASELINE_STATUS = Object.freeze({
+  PASS: 'pass',
+  FAIL: 'fail',
+  WARN: 'warn',
+  SKIP: 'skip',
+  UNKNOWN: 'unknown',
+});
+
+const BASELINE_CATEGORY = Object.freeze({
+  PATCH: 'patch',
+  ENCRYPTION: 'encryption',
+  MFA: 'mfa',
+  ANTIVIRUS: 'antivirus',
+  EDR: 'edr',
+  FIREWALL: 'firewall',
+  BACKUP: 'backup',
+  PASSWORD_POLICY: 'password_policy',
+  ACCESS_CONTROL: 'access_control',
+  OS_CONFIG: 'os_config',
+});
+
+const EDR_VENDOR = Object.freeze({
+  CROWDSTRIKE: 'crowdstrike',
+  SENTINELONE: 'sentinelone',
+  MICROSOFT_DEFENDER: 'microsoft_defender',
+  SOPHOS: 'sophos',
+  CARBON_BLACK: 'carbon_black',
+  ELASTIC: 'elastic',
+  CUSTOM: 'custom',
+});
+
+const EDR_EVENT_SEVERITY = Object.freeze({
+  INFO: 'info',
+  LOW: 'low',
+  MEDIUM: 'medium',
+  HIGH: 'high',
+  CRITICAL: 'critical',
+});
+
+const ONBOARDING_PROVISION_STATUS = Object.freeze({
+  REQUESTED: 'requested',
+  PREPARING: 'preparing',
+  DISPATCHED: 'dispatched',
+  DELIVERED: 'delivered',
+  ACTIVATED: 'activated',
+  CANCELLED: 'cancelled',
+});
+
+const SOFTWARE_LICENSE_TYPE = Object.freeze({
+  PER_USER: 'per_user',
+  PER_DEVICE: 'per_device',
+  SITE: 'site',
+  SUBSCRIPTION: 'subscription',
+  PERPETUAL: 'perpetual',
+  FREE: 'free',
+});
+
+const DEVICE_SOFTWARE_STATUS = Object.freeze({
+  INSTALLED: 'installed',
+  PENDING: 'pending',
+  UNINSTALLED: 'uninstalled',
+  FAILED: 'failed',
+});
+
 const CHAT_SENDER_TYPE = Object.freeze({
   EMPLOYEE: 'employee',
   HR: 'hr',
@@ -277,4 +391,15 @@ module.exports = {
   HR_REQUEST_TYPE,
   HR_REQUEST_STATUS,
   CHAT_SENDER_TYPE,
+  DEVICE_STATUS,
+  DEVICE_OWNERSHIP,
+  DEVICE_CATEGORY,
+  OS_FAMILY,
+  BASELINE_STATUS,
+  BASELINE_CATEGORY,
+  EDR_VENDOR,
+  EDR_EVENT_SEVERITY,
+  ONBOARDING_PROVISION_STATUS,
+  SOFTWARE_LICENSE_TYPE,
+  DEVICE_SOFTWARE_STATUS,
 };

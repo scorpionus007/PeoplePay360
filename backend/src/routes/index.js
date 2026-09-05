@@ -6,6 +6,7 @@ const authRoutes = require('../modules/auth/authRoutes');
 const coreRoutes = require('../modules/core/routes');
 const payrollRoutes = require('../modules/payroll/routes');
 const hrRoutes = require('../modules/hr/routes');
+const itAdminRoutes = require('../modules/itAdmin/routes');
 
 const router = express.Router();
 
@@ -14,6 +15,7 @@ router.get('/health', (req, res) => success(res, { status: 'ok', service: 'peopl
 router.use('/auth', authRoutes);
 router.use('/', coreRoutes);
 router.use('/hr', hrRoutes);
+router.use('/it', itAdminRoutes);
 router.use('/payroll', payrollRoutes);
 
 module.exports = router;
