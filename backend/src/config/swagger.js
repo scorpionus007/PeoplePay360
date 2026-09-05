@@ -62,6 +62,15 @@ const options = {
       { name: 'Benefits: Vouchers', description: 'Gift vouchers issue, deliver, redeem' },
       { name: 'Benefits: Discount Partners', description: 'External tie ups and discounts' },
       { name: 'Benefits: Dashboard', description: 'Benefits KPI dashboard' },
+      { name: 'Hiring: Requisitions', description: 'Job requisitions and approvals' },
+      { name: 'Hiring: Job Boards', description: 'External job board integrations' },
+      { name: 'Hiring: Job Postings', description: 'Published job postings' },
+      { name: 'Hiring: Candidates', description: 'Candidate profiles' },
+      { name: 'Hiring: Applications', description: 'Applications and pipeline stages' },
+      { name: 'Hiring: Interviews', description: 'Interview scheduling and feedback' },
+      { name: 'Hiring: Offers', description: 'Offer lifecycle' },
+      { name: 'Hiring: Referrals', description: 'Employee referrals' },
+      { name: 'Hiring: Dashboard', description: 'Hiring KPI dashboard' },
     ],
     components: {
       securitySchemes: {

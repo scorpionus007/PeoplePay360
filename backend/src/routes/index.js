@@ -8,6 +8,7 @@ const payrollRoutes = require('../modules/payroll/routes');
 const hrRoutes = require('../modules/hr/routes');
 const itAdminRoutes = require('../modules/itAdmin/routes');
 const benefitsRoutes = require('../modules/benefits/routes');
+const hiringRoutes = require('../modules/hiring/routes');
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.use('/', coreRoutes);
 router.use('/hr', hrRoutes);
 router.use('/it', itAdminRoutes);
 router.use('/benefits', benefitsRoutes);
+router.use('/hiring', hiringRoutes);
 router.use('/payroll', payrollRoutes);
 
 module.exports = router;

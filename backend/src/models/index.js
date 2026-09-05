@@ -28,6 +28,18 @@ const HRRequest = require('../modules/hr/models/HRRequest')(sequelize);
 const HRRequestMessage = require('../modules/hr/models/HRRequestMessage')(sequelize);
 const HRAnnouncement = require('../modules/hr/models/HRAnnouncement')(sequelize);
 
+// Hiring module models
+const Requisition = require('../modules/hiring/models/Requisition')(sequelize);
+const JobBoardIntegration = require('../modules/hiring/models/JobBoardIntegration')(sequelize);
+const JobPosting = require('../modules/hiring/models/JobPosting')(sequelize);
+const Candidate = require('../modules/hiring/models/Candidate')(sequelize);
+const Application = require('../modules/hiring/models/Application')(sequelize);
+const ApplicationStageHistory = require('../modules/hiring/models/ApplicationStageHistory')(sequelize);
+const Interview = require('../modules/hiring/models/Interview')(sequelize);
+const InterviewFeedback = require('../modules/hiring/models/InterviewFeedback')(sequelize);
+const Offer = require('../modules/hiring/models/Offer')(sequelize);
+const Referral = require('../modules/hiring/models/Referral')(sequelize);
+
 // Benefits module models
 const BenefitProvider = require('../modules/benefits/models/BenefitProvider')(sequelize);
 const BenefitPlan = require('../modules/benefits/models/BenefitPlan')(sequelize);
@@ -91,6 +103,16 @@ const models = {
   HRRequest,
   HRRequestMessage,
   HRAnnouncement,
+  Requisition,
+  JobBoardIntegration,
+  JobPosting,
+  Candidate,
+  Application,
+  ApplicationStageHistory,
+  Interview,
+  InterviewFeedback,
+  Offer,
+  Referral,
   BenefitProvider,
   BenefitPlan,
   BenefitEnrollment,

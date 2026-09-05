@@ -114,6 +114,12 @@ module.exports = (sequelize) => {
     if (models.GiftVoucher) {
       Employee.hasMany(models.GiftVoucher, { as: 'gift_vouchers', foreignKey: 'employee_id' });
     }
+    if (models.Referral) {
+      Employee.hasMany(models.Referral, {
+        as: 'referrals_submitted',
+        foreignKey: 'referrer_employee_id',
+      });
+    }
   };
 
   Employee.prototype.fullName = function fullName() {

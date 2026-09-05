@@ -106,6 +106,30 @@ const PERMISSIONS = Object.freeze({
   VOUCHER_WRITE: 'voucher.write',
   DISCOUNT_PARTNER_READ: 'discount.partner.read',
   DISCOUNT_PARTNER_WRITE: 'discount.partner.write',
+
+  // Hiring
+  REQUISITION_READ: 'requisition.read',
+  REQUISITION_WRITE: 'requisition.write',
+  REQUISITION_APPROVE: 'requisition.approve',
+  JOB_POSTING_READ: 'job.posting.read',
+  JOB_POSTING_WRITE: 'job.posting.write',
+  JOB_POSTING_PUBLISH: 'job.posting.publish',
+  JOB_BOARD_READ: 'job.board.read',
+  JOB_BOARD_WRITE: 'job.board.write',
+  CANDIDATE_READ: 'candidate.read',
+  CANDIDATE_WRITE: 'candidate.write',
+  APPLICATION_READ: 'application.read',
+  APPLICATION_WRITE: 'application.write',
+  APPLICATION_PROGRESS: 'application.progress',
+  INTERVIEW_READ: 'interview.read',
+  INTERVIEW_WRITE: 'interview.write',
+  INTERVIEW_FEEDBACK_WRITE: 'interview.feedback.write',
+  OFFER_READ: 'offer.read',
+  OFFER_WRITE: 'offer.write',
+  OFFER_APPROVE: 'offer.approve',
+  REFERRAL_READ: 'referral.read',
+  REFERRAL_WRITE: 'referral.write',
+  REFERRAL_SUBMIT: 'referral.submit',
 });
 
 const EMPLOYMENT_STATUS = Object.freeze({
@@ -363,6 +387,103 @@ const VOUCHER_STATUS = Object.freeze({
   CANCELLED: 'cancelled',
 });
 
+const REQUISITION_STATUS = Object.freeze({
+  DRAFT: 'draft',
+  PENDING_APPROVAL: 'pending_approval',
+  APPROVED: 'approved',
+  ON_HOLD: 'on_hold',
+  FILLED: 'filled',
+  CANCELLED: 'cancelled',
+});
+
+const JOB_POSTING_STATUS = Object.freeze({
+  DRAFT: 'draft',
+  PUBLISHED: 'published',
+  PAUSED: 'paused',
+  CLOSED: 'closed',
+  ARCHIVED: 'archived',
+});
+
+const HIRING_TRACK = Object.freeze({
+  INTERNAL: 'internal',
+  EXTERNAL: 'external',
+  INTERN: 'intern',
+  FREELANCER: 'freelancer',
+  AUDITOR: 'auditor',
+});
+
+const APPLICATION_STAGE = Object.freeze({
+  APPLIED: 'applied',
+  SCREENING: 'screening',
+  PHONE_SCREEN: 'phone_screen',
+  ASSESSMENT: 'assessment',
+  INTERVIEW: 'interview',
+  ONSITE: 'onsite',
+  OFFER: 'offer',
+  HIRED: 'hired',
+  REJECTED: 'rejected',
+  WITHDRAWN: 'withdrawn',
+  ON_HOLD: 'on_hold',
+});
+
+const APPLICATION_SOURCE = Object.freeze({
+  DIRECT: 'direct',
+  REFERRAL: 'referral',
+  JOB_BOARD: 'job_board',
+  AGENCY: 'agency',
+  SOURCED: 'sourced',
+  INTERNAL: 'internal',
+  UNIVERSITY: 'university',
+});
+
+const INTERVIEW_TYPE = Object.freeze({
+  PHONE: 'phone',
+  VIDEO: 'video',
+  ONSITE: 'onsite',
+  TECHNICAL: 'technical',
+  PANEL: 'panel',
+  BEHAVIORAL: 'behavioral',
+  CULTURE: 'culture',
+  TAKE_HOME: 'take_home',
+});
+
+const INTERVIEW_STATUS = Object.freeze({
+  SCHEDULED: 'scheduled',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+  NO_SHOW: 'no_show',
+  RESCHEDULED: 'rescheduled',
+});
+
+const INTERVIEW_RECOMMENDATION = Object.freeze({
+  STRONG_HIRE: 'strong_hire',
+  HIRE: 'hire',
+  NO_HIRE: 'no_hire',
+  STRONG_NO_HIRE: 'strong_no_hire',
+  NEEDS_ANOTHER_ROUND: 'needs_another_round',
+});
+
+const OFFER_STATUS = Object.freeze({
+  DRAFT: 'draft',
+  PENDING_APPROVAL: 'pending_approval',
+  EXTENDED: 'extended',
+  NEGOTIATING: 'negotiating',
+  ACCEPTED: 'accepted',
+  DECLINED: 'declined',
+  RESCINDED: 'rescinded',
+  EXPIRED: 'expired',
+});
+
+const REFERRAL_STATUS = Object.freeze({
+  SUBMITTED: 'submitted',
+  IN_REVIEW: 'in_review',
+  ADVANCED: 'advanced',
+  HIRED: 'hired',
+  REJECTED: 'rejected',
+  BONUS_PAID: 'bonus_paid',
+  CANCELLED: 'cancelled',
+});
+
 const DEVICE_STATUS = Object.freeze({
   IN_STOCK: 'in_stock',
   ASSIGNED: 'assigned',
@@ -514,4 +635,14 @@ module.exports = {
   LOAN_STATUS,
   LOAN_INTEREST_MODE,
   VOUCHER_STATUS,
+  REQUISITION_STATUS,
+  JOB_POSTING_STATUS,
+  HIRING_TRACK,
+  APPLICATION_STAGE,
+  APPLICATION_SOURCE,
+  INTERVIEW_TYPE,
+  INTERVIEW_STATUS,
+  INTERVIEW_RECOMMENDATION,
+  OFFER_STATUS,
+  REFERRAL_STATUS,
 };
