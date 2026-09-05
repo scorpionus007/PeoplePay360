@@ -36,11 +36,19 @@ async function getOne(req, res) {
   return success(res, request);
 }
 
+function canActForOthers(req) {
+  return (req.user.roles || []).includes('admin') || (req.user.permissions || []).includes('advance.salary.approve');
+}
+
 async function request(req, res) {
   const { employee_id, requested_amount, repayment_mode, emi_months, reason } = req.body;
+  // Self-service requesters can only file for themselves; only an approver may
+  // file on behalf of another employee.
+  const employeeId = canActForOthers(req) && employee_id ? employee_id : req.user.employeeId;
+  if (!employeeId) throw AppError.badRequest('No employee context for the advance request');
   const created_request = await advance.createRequest({
     organizationId: req.user.organizationId,
-    employeeId: employee_id || req.user.employeeId,
+    employeeId,
     requestedAmount: requested_amount,
     reason,
     repaymentMode: repayment_mode,
@@ -52,6 +60,7 @@ async function request(req, res) {
 async function approve(req, res) {
   const request = await advance.approve({
     id: req.params.id,
+    organizationId: req.user.organizationId,
     approvedAmount: req.body.approved_amount,
     approvedBy: req.user.id,
   });
@@ -59,13 +68,14 @@ async function approve(req, res) {
 }
 
 async function reject(req, res) {
-  const request = await advance.reject({ id: req.params.id });
+  const request = await advance.reject({ id: req.params.id, organizationId: req.user.organizationId });
   return success(res, request);
 }
 
 async function disburse(req, res) {
   const request = await advance.markDisbursed({
     id: req.params.id,
+    organizationId: req.user.organizationId,
     disbursedBy: req.user.id,
     externalReference: req.body.external_reference,
   });
@@ -75,6 +85,7 @@ async function disburse(req, res) {
 async function recordRepayment(req, res) {
   const result = await advance.recordRepayment({
     id: req.params.id,
+    organizationId: req.user.organizationId,
     mode: req.body.mode,
     amount: req.body.amount,
     currency: req.body.currency,
@@ -86,7 +97,11 @@ async function recordRepayment(req, res) {
 }
 
 async function convertToEmi(req, res) {
-  const request = await advance.convertToEmi({ id: req.params.id, emiMonths: req.body.emi_months });
+  const request = await advance.convertToEmi({
+    id: req.params.id,
+    organizationId: req.user.organizationId,
+    emiMonths: req.body.emi_months,
+  });
   return success(res, request);
 }
 

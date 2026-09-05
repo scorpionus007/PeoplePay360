@@ -55,6 +55,7 @@ async function suggest(req, res) {
 async function payrollDecide(req, res) {
   const request = await salaryChange.payrollDecide({
     id: req.params.id,
+    organizationId: req.user.organizationId,
     payrollReviewerId: req.user.id,
     decidedAmount: req.body.decided_amount,
     note: req.body.note,
@@ -65,6 +66,7 @@ async function payrollDecide(req, res) {
 async function adminApprove(req, res) {
   const request = await salaryChange.adminApprove({
     id: req.params.id,
+    organizationId: req.user.organizationId,
     adminReviewerId: req.user.id,
     note: req.body.note,
   });
@@ -74,6 +76,7 @@ async function adminApprove(req, res) {
 async function reject(req, res) {
   const request = await salaryChange.reject({
     id: req.params.id,
+    organizationId: req.user.organizationId,
     adminReviewerId: req.user.id,
     note: req.body.note,
   });
@@ -81,7 +84,11 @@ async function reject(req, res) {
 }
 
 async function apply(req, res) {
-  const result = await salaryChange.apply({ id: req.params.id, actorUserId: req.user.id });
+  const result = await salaryChange.apply({
+    id: req.params.id,
+    organizationId: req.user.organizationId,
+    actorUserId: req.user.id,
+  });
   return success(res, result);
 }
 
