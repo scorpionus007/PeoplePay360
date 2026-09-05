@@ -10,13 +10,19 @@ const {
   TIME_OFF_UNIT,
 } = require('../../../config/constants');
 
+// Returns the leave duration, or -1 to signal an invalid half-day span (a
+// half day must start and end on the same day).
 function durationFrom({ startDate, endDate, isHalfDay, unit }) {
   const start = dayjs(startDate);
   const end = dayjs(endDate);
   if (!start.isValid() || !end.isValid() || end.isBefore(start)) return 0;
   const days = end.diff(start, 'day') + 1;
+  if (isHalfDay) {
+    if (days !== 1) return -1;
+    return unit === TIME_OFF_UNIT.HOURS ? 4 : 0.5;
+  }
   if (unit === TIME_OFF_UNIT.HOURS) return days * 8;
-  return isHalfDay ? 0.5 : days;
+  return days;
 }
 
 async function findApplicableAllocation({ employeeId, typeId, on, transaction }) {
@@ -79,6 +85,9 @@ async function refuseAllocation({ organizationId, id }) {
     where: { id, organization_id: organizationId },
   });
   if (!allocation) throw AppError.notFound('Allocation not found');
+  if (allocation.status !== TIME_OFF_ALLOCATION_STATUS.PENDING_APPROVAL) {
+    throw AppError.conflict('Only a pending allocation can be refused');
+  }
   allocation.status = TIME_OFF_ALLOCATION_STATUS.REFUSED;
   await allocation.save();
   return allocation;
@@ -98,7 +107,25 @@ async function submitRequest({ organizationId, employeeId, payload }) {
       isHalfDay: payload.is_half_day,
       unit: type.unit,
     });
+    if (duration === -1) throw AppError.unprocessable('A half day request must start and end on the same day');
     if (duration <= 0) throw AppError.badRequest('Request duration must be greater than zero');
+
+    // Reject a new request that overlaps an existing pending/approved request
+    // for the same employee, to prevent double-booking the same days.
+    const overlap = await models.TimeOffRequest.findOne({
+      where: {
+        employee_id: employeeId,
+        status: { [Op.in]: [TIME_OFF_REQUEST_STATUS.PENDING, TIME_OFF_REQUEST_STATUS.APPROVED] },
+        start_date: { [Op.lte]: payload.end_date },
+        end_date: { [Op.gte]: payload.start_date },
+      },
+      transaction,
+    });
+    if (overlap) {
+      throw AppError.conflict('This leave overlaps an existing pending or approved request', {
+        conflicting_request_id: overlap.id,
+      });
+    }
 
     let allocation = null;
     if (type.requires_allocation) {

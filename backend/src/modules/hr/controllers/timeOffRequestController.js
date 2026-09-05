@@ -47,7 +47,9 @@ async function getOne(req, res) {
 }
 
 async function submit(req, res) {
-  const employeeId = req.body.employee_id || req.user.employeeId;
+  // Employees can only file leave for themselves; approvers may file on behalf.
+  const canActForOthers = (req.user.roles || []).includes('admin') || (req.user.permissions || []).includes('timeoff.request.approve');
+  const employeeId = canActForOthers && req.body.employee_id ? req.body.employee_id : req.user.employeeId;
   if (!employeeId) throw AppError.badRequest('No employee associated with this user');
   const row = await timeOff.submitRequest({
     organizationId: req.user.organizationId,
