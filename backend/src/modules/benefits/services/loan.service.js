@@ -84,6 +84,15 @@ async function apply({ organizationId, employeeId, loanProgramId, requestedAmoun
       feePercent: money.toNumber(program.processing_fee_percent),
     });
 
+    // Honor the program's approval configuration so requires_manager_approval
+    // is not dead: skip manager review when it is not required.
+    let initialStatus = LOAN_STATUS.SUBMITTED;
+    let approvedAmount = null;
+    if (!program.requires_manager_approval) {
+      approvedAmount = amount;
+      initialStatus = program.requires_admin_approval ? LOAN_STATUS.UNDER_REVIEW : LOAN_STATUS.APPROVED;
+    }
+
     return models.Loan.create(
       {
         organization_id: organizationId,
@@ -91,6 +100,7 @@ async function apply({ organizationId, employeeId, loanProgramId, requestedAmoun
         loan_program_id: program.id,
         code: nextLoanCode(),
         requested_amount: amount,
+        approved_amount: approvedAmount,
         currency: program.currency,
         tenure_months: tenureMonths,
         interest_mode: program.interest_mode,
@@ -100,7 +110,7 @@ async function apply({ organizationId, employeeId, loanProgramId, requestedAmoun
         total_repayable: schedule.total_repayable,
         salary_deduction: program.salary_deduction_default,
         reason: reason || null,
-        status: LOAN_STATUS.SUBMITTED,
+        status: initialStatus,
       },
       { transaction }
     );
@@ -126,6 +136,15 @@ async function managerReview({ organizationId, id, managerUserId, decidedAmount,
   }
 
   const amount = decidedAmount ?? money.toNumber(loan.requested_amount);
+  // Re-validate the decided amount against program limits so a reviewer cannot
+  // approve outside policy.
+  if (amount <= 0) throw AppError.unprocessable('Approved amount must be greater than zero');
+  if (loan.program && (amount < money.toNumber(loan.program.min_amount) || amount > money.toNumber(loan.program.max_amount))) {
+    throw AppError.unprocessable('Approved amount is outside program limits', {
+      min_amount: loan.program.min_amount,
+      max_amount: loan.program.max_amount,
+    });
+  }
   loan.approved_amount = amount;
 
   const schedule = computeSchedule({
@@ -148,6 +167,11 @@ async function adminReview({ organizationId, id, adminUserId, approve, note }) {
   const loan = await models.Loan.findOne({ where: { id, organization_id: organizationId } });
   if (!loan) throw AppError.notFound('Loan not found');
   if (loan.status !== LOAN_STATUS.UNDER_REVIEW) throw AppError.conflict('Loan is not pending admin review');
+  // Segregation of duties: the admin approver must differ from the manager who
+  // reviewed the loan.
+  if (adminUserId && loan.manager_reviewer_id && adminUserId === loan.manager_reviewer_id) {
+    throw AppError.forbidden('The admin approver must be a different person from the manager reviewer');
+  }
   loan.admin_reviewer_id = adminUserId;
   loan.admin_reviewed_at = new Date();
   loan.admin_note = note || null;
@@ -183,8 +207,11 @@ async function recordRepayment({ organizationId, id, mode, amount, currency, pay
     if (![LOAN_STATUS.DISBURSED, LOAN_STATUS.REPAYING].includes(loan.status)) {
       throw AppError.conflict('Loan is not in a repayable state');
     }
-    const numericAmount = money.toNumber(amount);
+    const outstanding = money.toNumber(loan.outstanding_amount);
+    let numericAmount = money.toNumber(amount);
     if (numericAmount <= 0) throw AppError.badRequest('Repayment amount must be greater than zero');
+    // Never record more than the outstanding balance so the ledger reconciles.
+    if (numericAmount > outstanding) numericAmount = outstanding;
 
     const repayment = await models.LoanRepayment.create(
       {

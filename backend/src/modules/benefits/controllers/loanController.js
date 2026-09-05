@@ -36,6 +36,8 @@ async function removeProgram(req, res) {
     where: { id: req.params.id, organization_id: req.user.organizationId },
   });
   if (!row) throw AppError.notFound('Loan program not found');
+  const loanCount = await models.Loan.count({ where: { loan_program_id: row.id } });
+  if (loanCount > 0) throw AppError.conflict('Cannot delete a loan program that has loans; deactivate it instead');
   await row.destroy();
   return noContent(res);
 }
@@ -72,7 +74,8 @@ async function getOne(req, res) {
 }
 
 async function apply(req, res) {
-  const employeeId = req.body.employee_id || req.user.employeeId;
+  const canActForOthers = (req.user.roles || []).includes('admin') || (req.user.permissions || []).includes('loan.approve');
+  const employeeId = canActForOthers && req.body.employee_id ? req.body.employee_id : req.user.employeeId;
   if (!employeeId) throw AppError.badRequest('No employee associated with this user');
   const row = await loanService.apply({
     organizationId: req.user.organizationId,

@@ -24,6 +24,10 @@ async function submit({ organizationId, employeeId, enrollmentId, subject, descr
     }
     const numericAmount = money.toNumber(amount);
     if (numericAmount <= 0) throw AppError.badRequest('Claim amount must be greater than zero');
+    const coverage = enrollment.plan ? money.toNumber(enrollment.plan.coverage_amount) : 0;
+    if (coverage > 0 && numericAmount > coverage) {
+      throw AppError.unprocessable(`Claim amount exceeds the plan coverage of ${coverage}`, { coverage });
+    }
 
     return models.BenefitClaim.create(
       {
@@ -64,8 +68,17 @@ async function approve({ organizationId, id, approvedAmount, reviewerUserId, not
   if (![BENEFIT_CLAIM_STATUS.SUBMITTED, BENEFIT_CLAIM_STATUS.UNDER_REVIEW].includes(claim.status)) {
     throw AppError.conflict('Claim is not in an approvable state');
   }
-  const amount = approvedAmount ?? money.toNumber(claim.claim_amount);
+  const claimAmount = money.toNumber(claim.claim_amount);
+  const amount = approvedAmount ?? claimAmount;
   if (amount <= 0) throw AppError.badRequest('Approved amount must be greater than zero');
+  if (amount > claimAmount) {
+    throw AppError.unprocessable('Approved amount cannot exceed the claimed amount', { claim_amount: claimAmount });
+  }
+  const plan = await models.BenefitPlan.findByPk(claim.benefit_plan_id);
+  const coverage = plan ? money.toNumber(plan.coverage_amount) : 0;
+  if (coverage > 0 && amount > coverage) {
+    throw AppError.unprocessable(`Approved amount exceeds the plan coverage of ${coverage}`, { coverage });
+  }
   claim.status = BENEFIT_CLAIM_STATUS.APPROVED;
   claim.approved_amount = amount;
   claim.reviewed_by = reviewerUserId;
@@ -95,7 +108,12 @@ async function reimburse({ organizationId, id, reimbursedAmount, reimburserUserI
   if (claim.status !== BENEFIT_CLAIM_STATUS.APPROVED) {
     throw AppError.conflict('Only approved claims can be reimbursed');
   }
-  const amount = reimbursedAmount ?? money.toNumber(claim.approved_amount);
+  const approved = money.toNumber(claim.approved_amount);
+  const amount = reimbursedAmount ?? approved;
+  if (amount <= 0) throw AppError.badRequest('Reimbursed amount must be greater than zero');
+  if (amount > approved) {
+    throw AppError.unprocessable('Reimbursed amount cannot exceed the approved amount', { approved_amount: approved });
+  }
   claim.status = BENEFIT_CLAIM_STATUS.REIMBURSED;
   claim.reimbursed_amount = amount;
   claim.reimbursed_by = reimburserUserId;

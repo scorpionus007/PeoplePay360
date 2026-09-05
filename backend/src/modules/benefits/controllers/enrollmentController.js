@@ -39,7 +39,8 @@ async function getOne(req, res) {
 }
 
 async function enroll(req, res) {
-  const employeeId = req.body.employee_id || req.user.employeeId;
+  const canActForOthers = (req.user.roles || []).includes('admin') || (req.user.permissions || []).includes('benefit.enrollment.approve');
+  const employeeId = canActForOthers && req.body.employee_id ? req.body.employee_id : req.user.employeeId;
   if (!employeeId) throw AppError.badRequest('No employee associated with this user');
   const row = await enrollment.enroll({
     organizationId: req.user.organizationId,

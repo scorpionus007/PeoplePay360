@@ -61,6 +61,13 @@ async function remove(req, res) {
     where: { id: req.params.id, organization_id: req.user.organizationId },
   });
   if (!row) throw AppError.notFound('Plan not found');
+  const [enrollmentCount, claimCount] = await Promise.all([
+    models.BenefitEnrollment.count({ where: { benefit_plan_id: row.id } }),
+    models.BenefitClaim.count({ where: { benefit_plan_id: row.id } }),
+  ]);
+  if (enrollmentCount > 0 || claimCount > 0) {
+    throw AppError.conflict('Cannot delete a plan with existing enrollments or claims; archive it instead');
+  }
   await row.destroy();
   return noContent(res);
 }
