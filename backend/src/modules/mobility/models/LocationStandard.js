@@ -36,9 +36,13 @@ module.exports = (sequelize) => {
     {
       tableName: 'mobility_location_standards',
       indexes: [
-        { fields: ['organization_id'] },
-        { fields: ['country_code'] },
-        { fields: ['organization_id', 'country_code', 'region_code'], unique: true },
+        { fields: ['organization_id'], name: 'mob_loc_std_org_idx' },
+        { fields: ['country_code'], name: 'mob_loc_std_country_idx' },
+        {
+          fields: ['organization_id', 'country_code', 'region_code'],
+          unique: true,
+          name: 'mob_loc_std_org_country_region_uidx',
+        },
       ],
     }
   );

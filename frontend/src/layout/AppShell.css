@@ -1,0 +1,27 @@
+.pp-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.pp-shell__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--pp-bg);
+}
+
+.pp-shell__content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.pp-shell__content-inner {
+  max-width: var(--pp-content-max);
+  margin: 0 auto;
+  padding: 32px 32px 64px;
+}
+
+@media (max-width: 900px) {
+  .pp-shell__content-inner { padding: 20px; }
+}

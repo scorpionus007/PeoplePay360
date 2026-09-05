@@ -1,0 +1,28 @@
+.pp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--pp-radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  line-height: 1.4;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+
+.pp-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pp-badge--neutral  { background: var(--pp-ink-100); color: var(--pp-ink-700); }
+.pp-badge--muted    { background: transparent;       color: var(--pp-text-soft); border-color: var(--pp-border); }
+.pp-badge--primary  { background: var(--pp-primary-50); color: var(--pp-primary-700); }
+.pp-badge--success  { background: var(--pp-mint-100);  color: #027a48; }
+.pp-badge--warning  { background: var(--pp-amber-100); color: #b54708; }
+.pp-badge--danger   { background: var(--pp-rose-100);  color: #b42318; }
+.pp-badge--info     { background: var(--pp-sky-100);   color: #026aa2; }

@@ -1,0 +1,70 @@
+.pp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--pp-radius-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: background var(--pp-transition-fast), border var(--pp-transition-fast), color var(--pp-transition-fast), transform var(--pp-transition-fast), box-shadow var(--pp-transition-fast);
+  white-space: nowrap;
+  user-select: none;
+}
+.pp-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.pp-btn:not(:disabled):active { transform: translateY(1px); }
+
+.pp-btn--sm { padding: 6px 12px; font-size: 12.5px; height: 32px; }
+.pp-btn--md { padding: 8px 16px; font-size: 13.5px; height: 38px; }
+.pp-btn--lg { padding: 12px 20px; font-size: 14.5px; height: 46px; }
+
+.pp-btn--block { display: flex; width: 100%; }
+
+.pp-btn--primary {
+  background: var(--pp-ink-950);
+  color: var(--pp-white);
+  border-color: var(--pp-ink-950);
+}
+.pp-btn--primary:not(:disabled):hover { background: var(--pp-ink-800); border-color: var(--pp-ink-800); }
+
+.pp-btn--secondary {
+  background: var(--pp-white);
+  color: var(--pp-text);
+  border-color: var(--pp-border-strong);
+  box-shadow: var(--pp-shadow-xs);
+}
+.pp-btn--secondary:not(:disabled):hover { background: var(--pp-ink-50); border-color: var(--pp-ink-300); }
+
+.pp-btn--ghost {
+  background: transparent;
+  color: var(--pp-text);
+  border-color: transparent;
+}
+.pp-btn--ghost:not(:disabled):hover { background: var(--pp-ink-100); }
+
+.pp-btn--subtle {
+  background: var(--pp-primary-50);
+  color: var(--pp-primary-700);
+  border-color: transparent;
+}
+.pp-btn--subtle:not(:disabled):hover { background: var(--pp-primary-100); }
+
+.pp-btn--danger {
+  background: var(--pp-rose-500);
+  color: var(--pp-white);
+  border-color: var(--pp-rose-500);
+}
+.pp-btn--danger:not(:disabled):hover { background: #d92e22; border-color: #d92e22; }
+
+.pp-btn__icon { display: inline-flex; align-items: center; }
+.pp-btn__label { display: inline-flex; align-items: center; }
+
+.pp-btn__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: pp-spin 0.7s linear infinite;
+}
+@keyframes pp-spin { to { transform: rotate(360deg); } }

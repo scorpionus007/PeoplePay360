@@ -1,0 +1,76 @@
+.pp-field { display: flex; flex-direction: column; gap: 6px; }
+
+.pp-field__label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--pp-text-muted);
+  letter-spacing: -0.005em;
+}
+.pp-field__req { color: var(--pp-rose-500); }
+
+.pp-field__control {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+.pp-field__control--adorned .pp-input { padding-left: 36px; }
+.pp-field__control--adorned .pp-input.pp-field__control--right-padded { padding-right: 36px; }
+
+.pp-field__adornment {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  color: var(--pp-text-soft);
+  pointer-events: none;
+}
+.pp-field__adornment--left { left: 12px; }
+.pp-field__adornment--right { right: 12px; }
+
+.pp-input {
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--pp-text);
+  background: var(--pp-white);
+  border: 1px solid var(--pp-border-strong);
+  border-radius: var(--pp-radius-md);
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color var(--pp-transition-fast), box-shadow var(--pp-transition-fast), background var(--pp-transition-fast);
+  width: 100%;
+  min-height: 38px;
+}
+.pp-input::placeholder { color: var(--pp-text-soft); }
+.pp-input:hover:not(:disabled) { border-color: var(--pp-ink-300); }
+.pp-input:focus {
+  border-color: var(--pp-primary-500);
+  box-shadow: 0 0 0 3px rgba(109, 92, 255, 0.15);
+}
+.pp-input:disabled { background: var(--pp-ink-50); color: var(--pp-text-muted); cursor: not-allowed; }
+
+.pp-textarea { min-height: 96px; resize: vertical; padding-top: 10px; padding-bottom: 10px; line-height: 1.5; }
+
+.pp-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a628a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.pp-field__hint {
+  font-size: 12px;
+  color: var(--pp-text-soft);
+}
+.pp-field__hint--error, .pp-field--error .pp-input {
+  color: var(--pp-rose-500);
+}
+.pp-field--error .pp-input {
+  border-color: var(--pp-rose-500);
+  color: var(--pp-text);
+}
+.pp-field--error .pp-input:focus {
+  box-shadow: 0 0 0 3px rgba(240, 68, 56, 0.15);
+}
