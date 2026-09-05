@@ -81,6 +81,19 @@ async function remove(req, res) {
     where: { id: req.params.id, organization_id: req.user.organizationId },
   });
   if (!row) throw AppError.notFound('Device not found');
+  if (row.status === 'assigned') {
+    throw AppError.conflict('Unassign the device before deleting it');
+  }
+  // Free any seats held by this device's software installs, then remove them.
+  const installs = await models.DeviceSoftware.findAll({ where: { device_id: row.id } });
+  for (const inst of installs) {
+    await models.SoftwareCatalogItem.decrement('seats_allocated', {
+      by: 1,
+      where: { id: inst.software_catalog_item_id, seats_allocated: { [Op.gt]: 0 } },
+    });
+  }
+  await models.DeviceSoftware.destroy({ where: { device_id: row.id } });
+  await models.DeviceBaselineCheck.destroy({ where: { device_id: row.id } });
   await row.destroy();
   return noContent(res);
 }

@@ -57,6 +57,27 @@ async function advanceStatus({ organizationId, id, status, actorUserId, deviceId
     });
     if (!provision) throw AppError.notFound('Provision not found');
 
+    // Enforce ordered progression: requested -> preparing -> dispatched ->
+    // delivered -> activated, with cancel reachable from any non-terminal state.
+    const ORDER = [
+      ONBOARDING_PROVISION_STATUS.REQUESTED,
+      ONBOARDING_PROVISION_STATUS.PREPARING,
+      ONBOARDING_PROVISION_STATUS.DISPATCHED,
+      ONBOARDING_PROVISION_STATUS.DELIVERED,
+      ONBOARDING_PROVISION_STATUS.ACTIVATED,
+    ];
+    if ([ONBOARDING_PROVISION_STATUS.ACTIVATED, ONBOARDING_PROVISION_STATUS.CANCELLED].includes(provision.status)) {
+      throw AppError.conflict('Provision is already in a terminal state');
+    }
+    if (status === ONBOARDING_PROVISION_STATUS.CANCELLED) {
+      // allowed from any non-terminal state
+    } else {
+      const fi = ORDER.indexOf(provision.status);
+      const ti = ORDER.indexOf(status);
+      if (ti === -1) throw AppError.unprocessable('Unknown provision status');
+      if (ti !== fi + 1) throw AppError.conflict('Provision status must advance one step at a time');
+    }
+
     const now = new Date();
     provision.status = status;
     if (status === ONBOARDING_PROVISION_STATUS.DISPATCHED) provision.dispatched_at = now;
@@ -77,21 +98,29 @@ async function advanceStatus({ organizationId, id, status, actorUserId, deviceId
         ) {
           throw AppError.conflict('Device is not available for onboarding');
         }
-        device.assigned_employee_id = provision.employee_id;
-        device.status = DEVICE_STATUS.ASSIGNED;
-        await device.save({ transaction });
+        // Avoid a duplicate open assignment if the device is already this
+        // employee's; otherwise close any straggler open assignment first.
+        if (device.status !== DEVICE_STATUS.ASSIGNED) {
+          await models.DeviceAssignment.update(
+            { returned_at: now, return_note: 'Auto-closed on onboarding activation' },
+            { where: { device_id: device.id, returned_at: null }, transaction }
+          );
+          device.assigned_employee_id = provision.employee_id;
+          device.status = DEVICE_STATUS.ASSIGNED;
+          await device.save({ transaction });
 
-        await models.DeviceAssignment.create(
-          {
-            device_id: device.id,
-            employee_id: provision.employee_id,
-            assigned_at: now,
-            checkout_condition: 'onboarding kit dispatched device',
-            checkout_note: `Auto assigned via onboarding provision ${provision.id}`,
-            assigned_by: actorUserId || null,
-          },
-          { transaction }
-        );
+          await models.DeviceAssignment.create(
+            {
+              device_id: device.id,
+              employee_id: provision.employee_id,
+              assigned_at: now,
+              checkout_condition: 'onboarding kit dispatched device',
+              checkout_note: `Auto assigned via onboarding provision ${provision.id}`,
+              assigned_by: actorUserId || null,
+            },
+            { transaction }
+          );
+        }
 
         provision.device_id = device.id;
       }

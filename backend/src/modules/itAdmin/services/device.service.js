@@ -11,11 +11,18 @@ async function assignToEmployee({ organizationId, deviceId, employeeId, assigned
       transaction,
     });
     if (!device) throw AppError.notFound('Device not found');
-    if (device.status === DEVICE_STATUS.RETIRED) {
-      throw AppError.conflict('Retired devices cannot be assigned');
+    // Only stock or in-repair devices may be assigned; lost, quarantined and
+    // retired devices are not assignable.
+    const ASSIGNABLE = [DEVICE_STATUS.IN_STOCK, DEVICE_STATUS.IN_REPAIR];
+    if (device.status === DEVICE_STATUS.ASSIGNED) {
+      if (device.assigned_employee_id !== employeeId) {
+        throw AppError.conflict('Device is already assigned to a different employee');
+      }
+      // Same-employee re-assign is a no-op rather than a duplicate assignment.
+      return { device, assignment: await models.DeviceAssignment.findOne({ where: { device_id: device.id, returned_at: null }, transaction }) };
     }
-    if (device.status === DEVICE_STATUS.ASSIGNED && device.assigned_employee_id !== employeeId) {
-      throw AppError.conflict('Device is already assigned to a different employee');
+    if (!ASSIGNABLE.includes(device.status)) {
+      throw AppError.conflict(`A ${device.status} device cannot be assigned`);
     }
 
     const employee = await models.Employee.findOne({
@@ -23,6 +30,12 @@ async function assignToEmployee({ organizationId, deviceId, employeeId, assigned
       transaction,
     });
     if (!employee) throw AppError.notFound('Employee not found');
+
+    // Guarantee at most one open assignment per device: close any stragglers.
+    await models.DeviceAssignment.update(
+      { returned_at: new Date(), return_note: 'Auto-closed on re-assignment' },
+      { where: { device_id: device.id, returned_at: null }, transaction }
+    );
 
     const assignment = await models.DeviceAssignment.create(
       {
